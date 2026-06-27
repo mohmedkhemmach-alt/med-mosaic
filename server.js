@@ -16,6 +16,7 @@ const JWT_SECRET = "marine-eco-secret-2025";
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // ===== IN-MEMORY DATABASE (replace with real DB) =====
 let DB = {
