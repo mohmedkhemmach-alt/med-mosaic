@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Article — Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      direction: ltr;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(2,11,24,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .logo { display: flex; align-items: center; gap: .7rem; text-decoration: none; }
+    .logo-img { height: 48px; width: 48px; object-fit: contain; transition: transform .3s; }
+    .logo:hover .logo-img { transform: rotate(-5deg) scale(1.08); }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem;
+      color: var(--muted); font-size: .93rem; text-decoration: none;
+      border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--cyan); background: rgba(0,201,200,0.1); }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25);
+      color: var(--muted); font-size: .8rem; font-family: inherit;
+      padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); padding: .45rem 1.1rem; border-radius: 8px;
+      font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      background: rgba(6,26,48,0.7);
+      border-bottom: 1px solid rgba(0,201,200,0.08);
+      padding: 10px 2rem;
+      padding-top: calc(68px + 10px);
+    }
+    .breadcrumb-inner {
+      max-width: 1100px; margin: 0 auto;
+      font-size: .8rem; color: var(--muted);
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .breadcrumb a { color: var(--cyan); text-decoration: none; transition: opacity .2s; }
+    .breadcrumb a:hover { opacity: .75; }
+    .breadcrumb-sep { color: rgba(0,201,200,0.3); }
+
+    /* ── ARTICLE HERO ── */
+    .article-hero {
+      background: linear-gradient(160deg, rgba(2,11,24,1) 0%, rgba(10,58,92,0.8) 50%, rgba(13,125,140,0.3) 100%);
+      padding: 4rem 2rem 5rem;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .article-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(1.5px 1.5px at 20% 30%, rgba(0,201,200,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 25%, rgba(0,201,200,.3) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 50% 70%, rgba(0,201,200,.35) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .article-emoji { font-size: 5rem; display: block; margin-bottom: 1.2rem; filter: drop-shadow(0 0 16px rgba(0,201,200,0.4)); }
+    .article-tag-hero {
+      display: inline-block;
+      background: rgba(0,201,200,0.15); color: var(--cyan);
+      border: 1px solid rgba(0,201,200,0.35);
+      padding: .3rem 1rem; border-radius: 100px;
+      font-size: .8rem; font-weight: 700; margin-bottom: 1.2rem;
+      letter-spacing: .5px;
+    }
+    .article-hero h1 {
+      font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+      font-weight: 900; color: var(--white);
+      max-width: 800px; margin: 0 auto 1.4rem; line-height: 1.4;
+      text-shadow: 0 4px 24px rgba(0,0,0,.5);
+    }
+    .article-meta-hero {
+      display: flex; justify-content: center; gap: 1.8rem; flex-wrap: wrap;
+      color: var(--muted); font-size: .85rem;
+    }
+    .article-meta-hero span { display: flex; align-items: center; gap: .35rem; }
+    .hero-wave { position: absolute; bottom: 0; left: 0; right: 0; line-height: 0; }
+    .hero-wave svg { width: 100%; height: 50px; }
+
+    /* ── LAYOUT ── */
+    .article-layout {
+      max-width: 1100px; margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+      display: grid; grid-template-columns: 1fr 300px; gap: 2rem;
+    }
+
+    /* ── ARTICLE COVER IMAGE ── */
+    .article-cover-wrap {
+      width: 100%; border-radius: var(--r); overflow: hidden;
+      margin-bottom: 1.5rem; border: 1px solid rgba(0,201,200,0.15);
+      box-shadow: var(--glow);
+    }
+    .article-cover-img {
+      width: 100%; height: 320px; object-fit: cover; display: block;
+    }
+    @media(max-width:640px) { .article-cover-img { height: 200px; } }
+
+    /* ── LANG TABS ── */
+    .lang-tabs { display: flex; gap: 6px; margin-bottom: 1.5rem; }
+    .lang-tab {
+      padding: .35rem 1rem; border-radius: 100px;
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(0,201,200,0.2);
+      background: rgba(0,201,200,0.04);
+      color: var(--muted); font-family: 'Cairo', sans-serif; transition: all .2s;
+    }
+    .lang-tab.active { background: rgba(0,201,200,0.15); color: var(--cyan); border-color: rgba(0,201,200,0.45); }
+    .lang-tab:hover { color: var(--text); border-color: rgba(0,201,200,0.3); }
+
+    /* ── ARTICLE BODY ── */
+    .article-body {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,0.12);
+      border-radius: var(--r); padding: 2.5rem;
+      backdrop-filter: blur(8px);
+    }
+    .article-body p {
+      font-size: .97rem; color: var(--text);
+      line-height: 1.95; margin-bottom: 1.2rem;
+    }
+    .article-body h2 {
+      font-size: 1.25rem; font-weight: 800; color: var(--white);
+      margin: 2rem 0 .9rem; position: relative; padding-left: 1rem;
+    }
+    .article-body h2::before {
+      content: '';
+      position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 100%; background: linear-gradient(var(--teal), var(--cyan));
+      border-radius: 3px;
+    }
+    .article-body h3 {
+      font-size: 1.05rem; font-weight: 700; color: var(--cyan);
+      margin: 1.5rem 0 .75rem;
+    }
+    .article-body blockquote {
+      border-left: 3px solid var(--cyan);
+      padding: 1rem 1.5rem;
+      background: rgba(0,201,200,0.06);
+      border-radius: 0 10px 10px 0;
+      margin: 1.5rem 0; font-style: italic;
+      color: var(--muted); font-size: .92rem; line-height: 1.75;
+    }
+    .article-body ul { padding-left: 1.5rem; margin-bottom: 1.2rem; }
+    .article-body ul li {
+      font-size: .93rem; color: var(--text);
+      line-height: 1.85; margin-bottom: .4rem; list-style: none;
+      padding-left: .5rem; position: relative;
+    }
+    .article-body ul li::before {
+      content: '▸'; color: var(--cyan); position: absolute; left: -1rem;
+    }
+    .article-body strong { color: var(--white); font-weight: 700; }
+
+    /* ── SHARE ── */
+    .article-share {
+      display: flex; gap: 10px; margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid rgba(0,201,200,0.12); align-items: center; flex-wrap: wrap;
+    }
+    .share-label { font-size: .83rem; font-weight: 600; color: var(--muted); }
+    .share-btn {
+      padding: .4rem 1rem; border-radius: 8px; font-family: 'Cairo', sans-serif;
+      font-size: .8rem; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(0,201,200,0.2);
+      background: rgba(0,201,200,0.06); color: var(--muted);
+      transition: all .2s;
+    }
+    .share-btn:hover {
+      background: rgba(0,201,200,0.15);
+      border-color: rgba(0,201,200,0.4); color: var(--cyan);
+    }
+
+    /* ── COMMENT QUICK ── */
+    .comment-quick {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,0.12);
+      border-radius: var(--r); padding: 2rem; margin-top: 1.5rem;
+      backdrop-filter: blur(8px);
+    }
+    .comment-quick h3 {
+      font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 1.2rem;
+    }
+    .comment-quick input, .comment-quick textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid rgba(0,201,200,0.15); border-radius: 10px;
+      font-family: 'Cairo', sans-serif; font-size: .88rem;
+      outline: none; color: var(--text);
+      background: rgba(0,201,200,0.04); transition: border-color .2s;
+      margin-bottom: 10px;
+    }
+    .comment-quick input::placeholder, .comment-quick textarea::placeholder { color: var(--muted); }
+    .comment-quick input:focus, .comment-quick textarea:focus {
+      border-color: rgba(0,201,200,0.45); background: rgba(0,201,200,0.07);
+    }
+    .comment-quick textarea { resize: vertical; min-height: 90px; }
+    .submit-comment {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); border: none; padding: .65rem 1.6rem;
+      border-radius: 50px; font-family: 'Cairo', sans-serif;
+      font-size: .88rem; font-weight: 700; cursor: pointer;
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 6px 20px rgba(0,201,200,0.2);
+    }
+    .submit-comment:hover { opacity: .88; transform: translateY(-1px); }
+    .comments-preview { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 10px; }
+    .mini-comment {
+      padding: 1rem 1.2rem;
+      background: rgba(0,201,200,0.04);
+      border: 1px solid rgba(0,201,200,0.1);
+      border-radius: 10px;
+    }
+    .mini-comment-header { display: flex; align-items: center; gap: 10px; margin-bottom: .6rem; }
+    .mini-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+    }
+    .mini-comment h5 { font-size: .83rem; font-weight: 700; color: var(--white); }
+    .mini-comment .mini-date { font-size: .72rem; color: var(--muted); }
+    .mini-comment p { font-size: .85rem; color: var(--text); line-height: 1.65; }
+
+    /* ── SIDEBAR ── */
+    .sidebar-widget {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,0.12);
+      border-radius: var(--r); padding: 1.5rem;
+      margin-bottom: 1.2rem;
+      backdrop-filter: blur(8px);
+    }
+    .sidebar-widget h3 {
+      font-size: .85rem; font-weight: 700; color: var(--cyan);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 1rem; padding-bottom: .7rem;
+      border-bottom: 1px solid rgba(0,201,200,0.15);
+    }
+    .toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .toc-list li { border-bottom: 1px solid rgba(0,201,200,0.06); }
+    .toc-list li:last-child { border-bottom: none; }
+    .toc-list a {
+      display: block; font-size: .83rem; color: var(--muted); text-decoration: none;
+      padding: .45rem 0; transition: color .2s, padding .2s;
+    }
+    .toc-list a:hover { color: var(--cyan); padding-left: .4rem; }
+
+    .related-card {
+      display: flex; gap: 10px; margin-bottom: 12px; cursor: pointer;
+      padding-bottom: 12px; border-bottom: 1px solid rgba(0,201,200,0.08);
+      transition: opacity .2s;
+    }
+    .related-card:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .related-card:hover { opacity: .8; }
+    .related-emoji, .related-thumb {
+      font-size: 1.3rem; flex-shrink: 0; width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,201,200,0.08); border: 1px solid rgba(0,201,200,0.15);
+      border-radius: 10px; overflow: hidden;
+    }
+    .related-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .related-card h4 { font-size: .82rem; font-weight: 600; color: var(--white); line-height: 1.45; }
+    .related-card p  { font-size: .72rem; color: var(--muted); margin-top: 3px; }
+
+    /* AI widget */
+    .ai-widget {
+      background: linear-gradient(135deg, rgba(13,125,140,0.35), rgba(0,201,200,0.1));
+      border: 1px solid rgba(0,201,200,0.25);
+      border-radius: var(--r); padding: 1.5rem; margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .ai-widget h3 { font-size: .9rem; font-weight: 700; color: var(--white); margin-bottom: .5rem; }
+    .ai-widget p  { font-size: .8rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.6; }
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-weight: 700; font-size: .88rem;
+      padding: .65rem 1.5rem; border-radius: 50px; text-decoration: none;
+      box-shadow: 0 6px 20px rgba(0,201,200,0.25); transition: all .25s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,201,200,0.4); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: rgba(2,11,24,0.98);
+      border-top: 1px solid rgba(0,201,200,0.12);
+      padding: 2rem 1.5rem; text-align: center;
+    }
+    footer p { color: var(--muted); font-size: .83rem; }
+
+    /* ── SCROLL TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-size: 1.2rem; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,201,200,0.4);
+      opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    .scroll-top.visible { opacity: 1; pointer-events: all; }
+
+    @media(max-width:900px) { .article-layout { grid-template-columns: 1fr; } }
+    @media(max-width:640px) { .nav-links { display: none; } .article-body { padding: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="logo">
+        <img src="logo.jpg" alt="Med Mosaic Marine Journalism" class="logo-img" />
+        <div class="logo-text">
+          <span class="logo-name">MED MOSAIC</span>
+          <span class="logo-sub">Marine Journalism</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="news.html" class="active">News</a></li>
+        <li><a href="map.html">Map</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="comments.html">Comments</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div class="lang-switcher">
+          <button onclick="setLang('en')" class="lang-btn active" id="lb-en">EN</button>
+          <button onclick="setLang('fr')" class="lang-btn" id="lb-fr">FR</button>
+          <button onclick="setLang('ar')" class="lang-btn" id="lb-ar">AR</button>
+        </div>
+        <a href="login.html" class="btn-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <div class="breadcrumb-inner">
+      <a href="index.html">Home</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="news.html">News</a>
+      <span class="breadcrumb-sep">›</span>
+      <span id="breadcrumb-title">Article</span>
+    </div>
+  </div>
+
+  <!-- ARTICLE HERO -->
+  <div class="article-hero">
+    <span class="article-emoji" id="article-emoji">🌊</span>
+    <span class="article-tag-hero" id="article-tag">Loading…</span>
+    <h1 id="article-title">Loading article…</h1>
+    <div class="article-meta-hero">
+      <span>✍️ <span id="article-author">—</span></span>
+      <span>📅 <span id="article-date">—</span></span>
+      <span>👁 <span id="article-views">—</span> views</span>
+    </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 50" preserveAspectRatio="none">
+        <path d="M0,20 C360,50 1080,0 1440,20 L1440,50 L0,50 Z" fill="#020b18"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ARTICLE LAYOUT -->
+  <div class="article-layout">
+
+    <!-- MAIN -->
+    <div>
+      <div class="article-cover-wrap">
+        <img id="article-cover-img" class="article-cover-img" src="" alt="" loading="lazy" />
+      </div>
+
+      <div class="lang-tabs">
+        <button class="lang-tab active" onclick="switchArticleLang('en', this)">English</button>
+        <button class="lang-tab" onclick="switchArticleLang('fr', this)">Français</button>
+        <button class="lang-tab" onclick="switchArticleLang('ar', this)">العربية</button>
+      </div>
+
+      <article class="article-body" id="article-content">
+        <!-- Populated by JS -->
+      </article>
+
+
+      <!-- SHARE -->
+      <div class="article-share">
+        <span class="share-label">Share:</span>
+        <button class="share-btn" onclick="shareArticle('twitter')">𝕏 Twitter</button>
+        <button class="share-btn" onclick="shareArticle('facebook')">📘 Facebook</button>
+        <button class="share-btn" onclick="shareArticle('whatsapp')">💬 WhatsApp</button>
+        <button class="share-btn" onclick="copyLink()">🔗 Copy Link</button>
+      </div>
+
+      <!-- COMMENTS -->
+      <div class="comment-quick">
+        <h3>💬 Comments</h3>
+        <input type="text" id="c-name" placeholder="Your name" />
+        <textarea id="c-text" placeholder="Share your thoughts on this article…"></textarea>
+        <button class="submit-comment" onclick="submitComment()">Post Comment ➤</button>
+        <div class="comments-preview" id="comments-preview"></div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside>
+      <!-- TOC -->
+      <div class="sidebar-widget">
+        <h3>📑 Contents</h3>
+        <ul class="toc-list" id="toc-list">
+          <li><a href="#intro">Introduction</a></li>
+          <li><a href="#details">Scientific Details</a></li>
+          <li><a href="#impact">Environmental Impact</a></li>
+          <li><a href="#solutions">Key Findings</a></li>
+          <li><a href="#conclusion">Conclusion</a></li>
+        </ul>
+      </div>
+
+      <!-- RELATED -->
+      <div class="sidebar-widget">
+        <h3>📰 Related Articles</h3>
+        <div id="related-articles"></div>
+      </div>
+
+      <!-- AI CTA -->
+      <div class="ai-widget">
+        <h3>🤖 Ask the AI Assistant</h3>
+        <p>Have questions about this topic? Our marine AI assistant is ready to help.</p>
+        <a href="chatbot.html" class="btn-primary">Start a Conversation</a>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div style="display:flex; justify-content:center; margin-bottom:.8rem;">
+      <img src="logo.jpg" alt="Med Mosaic" style="height:40px;width:40px;object-fit:contain;" />
+    </div>
+    <p>© 2025 <strong style="color:var(--cyan)">Med Mosaic</strong> — Marine Journalism · Agadir, Morocco 🌊</p>
+  </footer>
+
+  <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    // ── ARTICLE DATA ──
+    const ARTICLES = [
+      { id:1, emoji:"🐟", tag:"Research", title:"Scientists Discover 12 New Fish Species in the Indian Ocean", titleFr:"Les scientifiques découvrent 12 nouvelles espèces de poissons dans l'océan Indien", titleAr:"العلماء يكتشفون 12 نوعاً جديداً من الأسماك في المحيط الهندي", author:"Dr. Sara Benali", date:"January 15, 2025", views:4200, excerpt:"An international research team documents new deep-sea species.", img:"reef" },
+      { id:2, emoji:"🛢️", tag:"Pollution", title:"Oil Spill Threatens Morocco's Northern Coast", titleFr:"Une marée noire menace la côte nord du Maroc", titleAr:"تسرب نفطي يهدد الساحل الشمالي للمغرب", author:"Marine Desk", date:"June 15, 2025", views:3400, excerpt:"Emergency teams mobilized near the Strait of Gibraltar.", img:"sea" },
+      { id:3, emoji:"🌡️", tag:"Climate", title:"Mediterranean Sea Temperature Rises 1.5°C in 30 Years", titleFr:"La température de la mer Méditerranée augmente de 1,5°C en 30 ans", titleAr:"حرارة البحر الأبيض المتوسط ترتفع 1.5°C خلال 30 عاماً", author:"Climate Watch", date:"June 10, 2025", views:5100, excerpt:"New data confirms accelerating warming trends in the Mediterranean.", img:"earth" },
+      { id:4, emoji:"🐬", tag:"Marine Life", title:"Dolphins Return to Agadir Shores After Years of Absence", titleFr:"Les dauphins reviennent sur les côtes d'Agadir", titleAr:"الدلافين تعود إلى شواطئ أغادير بعد سنوات من الغياب", author:"Field Reporter", date:"June 8, 2025", views:2900, excerpt:"Groups of spotted dolphins spotted near the Moroccan coast.", img:"wave" },
+      { id:5, emoji:"🪸", tag:"Protection", title:"Morocco Commits to Protecting 20% of its Coastline by 2030", titleFr:"Le Maroc s'engage à protéger 20% de son littoral d'ici 2030", titleAr:"المغرب يلتزم بحماية 20% من ساحله بحلول 2030", author:"Policy Desk", date:"June 5, 2025", views:4700, excerpt:"A new national marine protection initiative was signed at the Marrakech Forum.", img:"nature" },
+    ];
+
+    const ARTICLE_CONTENT = {
+      1: {
+        en: `<p id="intro">In an exciting scientific discovery, an international team of researchers successfully identified and documented <strong>12 new fish species</strong> in the depths of the Indian Ocean, at depths exceeding 3,000 meters below the surface.</p>
+        <h2 id="details">Scientific Details</h2>
+        <p>The research team, composed of scientists from 15 countries, used advanced submersibles equipped with high-definition cameras and sophisticated sensors. The mission lasted 47 days and collected thousands of images and samples.</p>
+        <blockquote>"This discovery proves that ocean depths still hide many secrets yet to be unveiled by science. 95% of the ocean floor remains unexplored." — Dr. Sara Benali, Mission Lead</blockquote>
+        <h2 id="impact">Environmental Impact</h2>
+        <p>The newly discovered species display remarkable adaptations to complete darkness and extreme pressure, including:</p>
+        <ul>
+          <li>Unique bioluminescent organs found nowhere else</li>
+          <li>Digestive systems based on volcanic sulfur</li>
+          <li>Oversized eyes to capture any available light</li>
+          <li>Transparent skin revealing internal organs</li>
+        </ul>
+        <h2 id="solutions">Key Findings</h2>
+        <p>This discovery reinforces scientific arguments for protecting deep-sea areas from mineral extraction and other human activities. Many of these species could be a source of future pharmaceutical compounds.</p>
+        <h2 id="conclusion">Conclusion</h2>
+        <p>This discovery reminds us that the oceans remain largely unknown, and that their preservation is not only an environmental responsibility but a scientific and civilizational necessity.</p>`,
+        fr: `<p id="intro">Dans une découverte scientifique majeure, une équipe internationale de chercheurs a réussi à identifier et documenter <strong>12 nouvelles espèces de poissons</strong> dans les profondeurs de l'océan Indien, à plus de 3000 mètres sous la surface.</p>
+        <h2 id="details">Détails Scientifiques</h2>
+        <p>L'équipe de recherche, composée de scientifiques de 15 pays, a utilisé des sous-marins avancés équipés de caméras haute définition et de capteurs sophistiqués. La mission a duré 47 jours et a collecté des milliers d'images et d'échantillons.</p>
+        <blockquote>« Cette découverte prouve que les profondeurs des océans cachent encore de nombreux secrets que la science n'a pas encore révélés. 95% des fonds marins restent inexplorés. » — Dr. Sara Benali</blockquote>
+        <h2 id="impact">Impact Environnemental</h2>
+        <p>Les nouvelles espèces découvertes présentent des adaptations remarquables à l'obscurité totale et à la pression immense des profondeurs.</p>
+        <h2 id="solutions">Importance de la découverte</h2>
+        <p>Cette découverte renforce les arguments scientifiques en faveur de la protection des zones marines profondes contre l'extraction minière et les activités humaines.</p>
+        <h2 id="conclusion">Conclusion</h2>
+        <p>Cette découverte nous rappelle que les océans restent largement méconnus et que leur préservation est non seulement une responsabilité environnementale mais aussi une nécessité scientifique et civilisationnelle.</p>`,
+        ar: `<p id="intro">في اكتشاف علمي مثير، تمكّن فريق دولي من العلماء من رصد وتوثيق <strong>12 نوعاً جديداً من الأسماك</strong> في أعماق المحيط الهندي، على عمق يتجاوز 3000 متر تحت سطح الماء.</p>
+        <h2 id="details">التفاصيل العلمية</h2>
+        <p>استخدم الفريق البحثي المؤلف من علماء من 15 دولة غواصات متطورة مجهزة بكاميرات عالية الدقة وأجهزة استشعار متقدمة. استغرقت البعثة 47 يوماً وجمعت آلاف الصور والعينات.</p>
+        <blockquote>قالت د. سارة بنعلي: "هذا الاكتشاف يُثبت أن أعماق المحيطات لا تزال تخفي أسراراً كثيرة. 95% من قاع المحيطات لا يزال غير مُستكشَف."</blockquote>
+        <h2 id="impact">التأثير البيئي</h2>
+        <p>الأنواع الجديدة المكتشفة تُظهر تكيفات مذهلة مع الظلام التام والضغط الهائل في الأعماق.</p>
+        <h2 id="solutions">أهمية الاكتشاف</h2>
+        <p>يُعزز هذا الاكتشاف الحجج العلمية الداعية إلى حماية المناطق البحرية العميقة من التنقيب عن المعادن.</p>
+        <h2 id="conclusion">الخلاصة</h2>
+        <p>يُذكّرنا هذا الاكتشاف بأن المحيطات لا تزال مجهولة إلى حدٍّ كبير، وأن الحفاظ عليها ضرورة علمية وحضارية.</p>`
+      }
+    };
+
+    function getDefaultContent(article, lang) {
+      const title = lang === 'fr' ? article.titleFr : lang === 'ar' ? article.titleAr : article.title;
+      const excerpt = article.excerpt;
+      return `<p id="intro">${excerpt}</p>
+        <h2 id="details">Details</h2>
+        <p>Our editorial team is currently preparing the full content for this article. Stay tuned for the complete coverage coming soon.</p>
+        <h2 id="impact">Environmental Impact</h2>
+        <p>This topic is of significant importance in the field of marine environmental protection. We will cover it in detail in the coming days.</p>
+        <h2 id="conclusion">Conclusion</h2>
+        <p>The marine environment is a treasure worth protecting and studying. Join us in our mission to raise awareness and safeguard our oceans.</p>`;
+    }
+
+    let currentArticle = null;
+    let currentLang = 'en';
+
+    function loadArticle() {
+      const params = new URLSearchParams(window.location.search);
+      const id = parseInt(params.get('id')) || 1;
+      currentArticle = ARTICLES.find(a => a.id === id) || ARTICLES[0];
+
+      document.getElementById('article-emoji').textContent = currentArticle.emoji;
+      document.getElementById('article-tag').textContent = currentArticle.tag;
+      document.getElementById('article-author').textContent = currentArticle.author;
+      document.getElementById('article-date').textContent = currentArticle.date;
+      document.getElementById('article-views').textContent = (currentArticle.views + 1).toLocaleString();
+      document.getElementById('breadcrumb-title').textContent = currentArticle.title;
+      document.title = currentArticle.title + ' — Med Mosaic';
+
+      const coverImg = document.getElementById('article-cover-img');
+      coverImg.src = `https://picsum.photos/seed/${currentArticle.img || 'ocean'}/1000/500`;
+      coverImg.alt = currentArticle.title;
+
+      renderArticleContent(currentLang);
+      renderRelated(id);
+      renderComments();
+    }
+
+    function renderArticleContent(lang) {
+      const titleKey = lang === 'fr' ? 'titleFr' : lang === 'ar' ? 'titleAr' : 'title';
+      document.getElementById('article-title').textContent = currentArticle[titleKey] || currentArticle.title;
+
+      // RTL for Arabic
+      const articleEl = document.getElementById('article-content');
+      articleEl.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+
+      const contentMap = ARTICLE_CONTENT[currentArticle.id];
+      const content = contentMap ? (contentMap[lang] || contentMap.en) : getDefaultContent(currentArticle, lang);
+      articleEl.innerHTML = content;
+    }
+
+    function switchArticleLang(lang, btn) {
+      currentLang = lang;
+      document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderArticleContent(lang);
+    }
+
+    function renderRelated(currentId) {
+      const related = ARTICLES.filter(a => a.id !== currentId).slice(0, 3);
+      document.getElementById('related-articles').innerHTML = related.map(a => `
+        <div class="related-card" onclick="location.href='article.html?id=${a.id}'">
+          <div class="related-thumb"><img src="https://picsum.photos/seed/${a.img || 'ocean'}/100/100" alt="${a.title}" loading="lazy" /></div>
+          <div>
+            <h4>${a.title}</h4>
+            <p>📅 ${a.date}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    let articleComments = [
+      { name: "Ahmed Al-Maghribi", avatar: "👨", text: "Excellent and very informative article! Thank you for this valuable content.", date: "2 days ago" },
+      { name: "Fatima Benali",     avatar: "👩", text: "Very interesting information. Are there more details available on this topic?", date: "1 day ago" }
+    ];
+
+    function renderComments() {
+      document.getElementById('comments-preview').innerHTML = articleComments.map(c => `
+        <div class="mini-comment">
+          <div class="mini-comment-header">
+            <div class="mini-avatar">${c.avatar}</div>
+            <div><h5>${c.name}</h5><span class="mini-date">${c.date}</span></div>
+          </div>
+          <p>${c.text}</p>
+        </div>
+      `).join('');
+    }
+
+    function submitComment() {
+      const name = document.getElementById('c-name').value.trim();
+      const text = document.getElementById('c-text').value.trim();
+      if (!name || !text) { alert('Please enter your name and comment.'); return; }
+      articleComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
+      document.getElementById('c-name').value = '';
+      document.getElementById('c-text').value = '';
+      renderComments();
+    }
+
+    function shareArticle(platform) {
+      const url = window.location.href;
+      const title = currentArticle?.title || 'Article from Med Mosaic';
+      const urls = {
+        twitter:   `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+        facebook:  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        whatsapp:  `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`
+      };
+      window.open(urls[platform], '_blank');
+    }
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'));
+    }
+
+    function setLang(lang) {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('lb-' + lang)?.classList.add('active');
+    }
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadArticle);
+  </script>
+  <script src="i18n.js"></script>
+</body>
+</html>

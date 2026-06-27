@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marine News — Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      direction: ltr;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(2,11,24,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: .7rem;
+      text-decoration: none;
+    }
+    .logo-img {
+      height: 48px; width: 48px; object-fit: contain;
+      transition: transform .3s;
+    }
+    .logo:hover .logo-img { transform: rotate(-5deg) scale(1.08); }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem;
+      color: var(--muted); font-size: .93rem; text-decoration: none;
+      border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--cyan); background: rgba(0,201,200,0.1);
+    }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25);
+      color: var(--muted); font-size: .8rem; font-family: inherit;
+      padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); padding: .45rem 1.1rem; border-radius: 8px;
+      font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      padding-top: 68px;
+      background: linear-gradient(160deg, rgba(2,11,24,1) 0%, rgba(10,58,92,0.7) 60%, rgba(13,125,140,0.2) 100%);
+      border-bottom: 1px solid rgba(0,201,200,0.12);
+      padding-bottom: 3rem;
+      padding-top: calc(68px + 3rem);
+      text-align: center;
+    }
+    .page-header h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; color: var(--white); margin-bottom: .6rem; }
+    .page-header h1 span { color: var(--cyan); }
+    .page-header p { color: var(--muted); font-size: 1rem; }
+
+    /* ── FILTERS ── */
+    .filters {
+      background: rgba(6,26,48,0.9);
+      border-bottom: 1px solid rgba(0,201,200,0.1);
+      padding: 16px 24px;
+      position: sticky; top: 68px; z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .filters-inner {
+      max-width: 1240px; margin: 0 auto;
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-btn {
+      padding: 7px 18px; border-radius: 100px; font-size: .82rem; font-weight: 600; cursor: pointer;
+      border: 1px solid rgba(0,201,200,0.2);
+      background: rgba(0,201,200,0.04);
+      color: var(--muted); transition: all .2s; font-family: 'Cairo', sans-serif;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: rgba(0,201,200,0.15);
+      color: var(--cyan);
+      border-color: rgba(0,201,200,0.45);
+    }
+    .search-box {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+      background: rgba(0,201,200,0.06); border: 1px solid rgba(0,201,200,0.2);
+      border-radius: 10px; padding: 7px 14px;
+    }
+    .search-box input {
+      border: none; background: transparent;
+      font-family: 'Cairo', sans-serif; font-size: .88rem;
+      outline: none; color: var(--text); width: 200px;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+    .search-icon { color: var(--muted); font-size: .9rem; }
+
+    /* ── FEATURED ── */
+    .news-page { padding: 3rem 1.5rem 5rem; max-width: 1240px; margin: 0 auto; }
+    .featured-article {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,0.15);
+      border-radius: var(--r); overflow: hidden;
+      display: grid; grid-template-columns: 1.4fr 1fr;
+      margin-bottom: 3rem;
+      transition: border-color .25s, box-shadow .25s;
+    }
+    .featured-article:hover {
+      border-color: rgba(0,201,200,0.4);
+      box-shadow: var(--glow);
+    }
+    .featured-img {
+      background: linear-gradient(135deg, var(--ocean), var(--teal));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 80px; min-height: 260px;
+    }
+    .featured-body { padding: 2.5rem; }
+    .news-tag {
+      display: inline-block;
+      background: rgba(0,201,200,0.15); color: var(--cyan);
+      border: 1px solid rgba(0,201,200,0.3);
+      font-size: .72rem; font-weight: 700; padding: .25rem .8rem;
+      border-radius: 100px; margin-bottom: 1rem;
+    }
+    .featured-body h2 {
+      font-size: 1.4rem; font-weight: 800; color: var(--white);
+      margin-bottom: .8rem; line-height: 1.5;
+    }
+    .featured-body p { font-size: .9rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem; }
+    .news-meta { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.2rem; }
+    .news-date { font-size: .78rem; color: var(--muted); }
+    .news-views { font-size: .78rem; color: var(--muted); }
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-weight: 700; font-size: .9rem;
+      padding: .75rem 1.8rem; border-radius: 50px; text-decoration: none;
+      box-shadow: 0 8px 28px rgba(0,201,200,0.25); transition: all .25s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,201,200,0.4); }
+
+    /* ── NEWS GRID ── */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 1.8rem; }
+    .news-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,0.1);
+      border-radius: var(--r); overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      cursor: pointer; text-decoration: none; display: block; color: inherit;
+    }
+    .news-card:hover { transform: translateY(-5px); border-color: rgba(0,201,200,0.4); box-shadow: var(--glow); }
+    .news-card-img-wrap { overflow: hidden; position: relative; }
+    .news-card-img { width: 100%; height: 200px; object-fit: cover; display: block; transition: transform .4s; }
+    .news-card:hover .news-card-img { transform: scale(1.05); }
+    .news-card-tag {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(0,201,200,0.9); color: var(--deep);
+      font-size: .7rem; font-weight: 700; padding: .2rem .65rem; border-radius: 100px;
+    }
+    .news-card-body { padding: 1.3rem; }
+    .news-title { font-size: 1rem; font-weight: 700; color: var(--white); line-height: 1.55; margin-bottom: .6rem; }
+    .news-excerpt { font-size: .85rem; color: var(--muted); line-height: 1.65; }
+    .news-card-footer {
+      padding: .9rem 1.3rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .read-more { color: var(--cyan); font-size: .83rem; font-weight: 600; }
+
+    .section-label {
+      font-size: .78rem; font-weight: 700; color: var(--cyan);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-bottom: 1.5rem; padding-bottom: .6rem;
+      border-bottom: 1px solid rgba(0,201,200,0.15);
+    }
+    .no-results { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 1rem; }
+
+    @media(max-width:768px) { .featured-article { grid-template-columns: 1fr; } }
+    @media(max-width:640px) { .nav-links { display: none; } }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="logo">
+        <img src="logo.jpg" alt="Med Mosaic Marine Journalism" class="logo-img" />
+        <div class="logo-text">
+          <span class="logo-name">MED MOSAIC</span>
+          <span class="logo-sub">Marine Journalism</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="news.html" class="active">News</a></li>
+        <li><a href="map.html">Map</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="comments.html">Comments</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div class="lang-switcher">
+          <button onclick="setLang('en')" class="lang-btn active" id="lb-en">EN</button>
+          <button onclick="setLang('fr')" class="lang-btn" id="lb-fr">FR</button>
+          <button onclick="setLang('ar')" class="lang-btn" id="lb-ar">AR</button>
+        </div>
+        <a href="login.html" class="btn-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <h1>🗞️ <span>Marine</span> News</h1>
+    <p>Latest reports and updates on the marine environment and oceans</p>
+  </div>
+
+  <div class="filters">
+    <div class="filters-inner">
+      <button class="filter-btn active" onclick="filterNews('all', this)">All</button>
+      <button class="filter-btn" onclick="filterNews('Pollution', this)">Pollution</button>
+      <button class="filter-btn" onclick="filterNews('Biodiversity', this)">Biodiversity</button>
+      <button class="filter-btn" onclick="filterNews('Climate', this)">Climate</button>
+      <button class="filter-btn" onclick="filterNews('Protection', this)">Protection</button>
+      <button class="filter-btn" onclick="filterNews('Research', this)">Research</button>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search articles…" oninput="applyFilters()" />
+      </div>
+    </div>
+  </div>
+
+  <main class="news-page">
+    <!-- FEATURED -->
+    <div class="featured-article" id="featured">
+      <div class="featured-img">🌊</div>
+      <div class="featured-body">
+        <span class="news-tag">🔬 Research</span>
+        <h2>Scientists Reveal First-Ever Comprehensive Map of Global Ocean Currents</h2>
+        <p>A massive research project spanning 47 countries presents the first 3D map of global ocean currents with unprecedented accuracy, set to transform our understanding of world climate.</p>
+        <div class="news-meta">
+          <span class="news-date">January 15, 2025</span>
+          <span class="news-views">👁 4,200</span>
+        </div>
+        <a href="article.html?id=1" class="btn-primary">Read Full Article →</a>
+      </div>
+    </div>
+
+    <!-- GRID -->
+    <div class="section-label">Latest Articles</div>
+    <div class="news-grid" id="news-grid"></div>
+    <p class="no-results" id="no-results" style="display:none">😕 No matching results found</p>
+  </main>
+
+  <footer style="background:rgba(2,11,24,0.98); border-top:1px solid rgba(0,201,200,0.12); padding:2rem 1.5rem; text-align:center;">
+    <div style="display:flex; justify-content:center; margin-bottom:.8rem;">
+      <img src="logo.jpg" alt="Med Mosaic" style="height:40px;width:40px;object-fit:contain;" />
+    </div>
+    <p style="color:var(--muted); font-size:.83rem;">© 2025 <strong style="color:var(--cyan)">Med Mosaic</strong> — Marine Journalism · Agadir, Morocco 🌊</p>
+  </footer>
+
+  <button style="position:fixed;bottom:2rem;right:2rem;z-index:999;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--cyan));color:var(--deep);font-size:1.2rem;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,201,200,.4);opacity:0;transition:opacity .3s;pointer-events:none;" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    const ARTICLES = [
+      { id:2, tag:"Pollution", emoji:"🛢️", title:"Oil Spill Threatens Morocco's Northern Coast", excerpt:"Moroccan environmental authorities deploy rapid response teams near the Strait of Gibraltar.", date:"Jun 15, 2025", views:"3.4K", img:"sea" },
+      { id:3, tag:"Climate", emoji:"🌡️", title:"Mediterranean Sea Temperature Rises 1.5°C in 30 Years", excerpt:"New data from the European Centre for Ocean Research confirms accelerating warming trends.", date:"Jun 10, 2025", views:"5.1K", img:"earth" },
+      { id:4, tag:"Biodiversity", emoji:"🐬", title:"Dolphins Return to Agadir Shores After Years of Absence", excerpt:"Groups of spotted dolphins were spotted near the Moroccan coast following fishing restrictions.", date:"Jun 8, 2025", views:"2.9K", img:"wave" },
+      { id:5, tag:"Protection", emoji:"🪸", title:"Morocco Commits to Protecting 20% of its Coastline by 2030", excerpt:"A new national marine protection initiative was signed at the Marrakech Environment Forum.", date:"Jun 5, 2025", views:"4.7K", img:"nature" },
+      { id:6, tag:"Research", emoji:"🔬", title:"New Study Maps Microplastic Hotspots in the Atlantic", excerpt:"Researchers identify six critical zones where microplastic concentration is dangerously high.", date:"May 28, 2025", views:"3.2K", img:"reef" },
+      { id:7, tag:"Pollution", emoji:"♻️", title:"8 Million Tons of Plastic Enter Oceans Every Year", excerpt:"UN Environment Programme releases its annual report on marine plastic pollution for 2025.", date:"May 20, 2025", views:"6.0K", img:"beach" },
+    ];
+
+    let currentFilter = 'all';
+
+    function renderNews(articles = ARTICLES) {
+      const grid = document.getElementById('news-grid');
+      grid.innerHTML = articles.map(a => `
+        <a href="article.html?id=${a.id}" class="news-card">
+          <div class="news-card-img-wrap">
+            <img src="https://picsum.photos/seed/${a.img}/600/400" alt="${a.title}" class="news-card-img" loading="lazy" />
+            <span class="news-card-tag">${a.emoji} ${a.tag}</span>
+          </div>
+          <div class="news-card-body">
+            <div class="news-meta">
+              <span class="news-date">${a.date}</span>
+              <span class="news-views">👁 ${a.views}</span>
+            </div>
+            <div class="news-title">${a.title}</div>
+            <div class="news-excerpt">${a.excerpt}</div>
+          </div>
+          <div class="news-card-footer">
+            <span class="read-more">Read More →</span>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function filterNews(tag, btn) {
+      currentFilter = tag;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('search-input')?.value.toLowerCase() || '';
+      let filtered = ARTICLES;
+      if (currentFilter !== 'all') filtered = filtered.filter(a => a.tag === currentFilter);
+      if (q) filtered = filtered.filter(a => a.title.toLowerCase().includes(q) || a.excerpt.toLowerCase().includes(q));
+      renderNews(filtered);
+      document.getElementById('no-results').style.display = filtered.length ? 'none' : 'block';
+    }
+
+    function setLang(lang) {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('lb-' + lang)?.classList.add('active');
+    }
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('scrollTop').style.opacity = window.scrollY > 400 ? '1' : '0';
+      document.getElementById('scrollTop').style.pointerEvents = window.scrollY > 400 ? 'all' : 'none';
+    });
+
+    renderNews();
+  </script>
+  <script src="i18n.js"></script>
+</body>
+</html>

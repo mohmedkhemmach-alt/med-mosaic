@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Med Mosaic - Marine Journalism</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep);
+      color: var(--text);
+      direction: ltr;
+      overflow-x: hidden;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(2,11,24,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: .7rem;
+      text-decoration: none;
+    }
+    .logo-img {
+      height: 48px; width: 48px; object-fit: contain;
+      /* original colors */
+      transition: transform .3s;
+    }
+    .logo:hover .logo-img { transform: rotate(-5deg) scale(1.08); }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem;
+      color: var(--muted); font-size: .93rem; text-decoration: none;
+      border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--cyan); background: rgba(0,201,200,0.1);
+    }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25);
+      color: var(--muted); font-size: .8rem; font-family: inherit;
+      padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); padding: .45rem 1.1rem; border-radius: 8px;
+      font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; padding-top: 68px;
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNDQwIDgxMCI+CiAgPGRlZnM+CiAgICA8cmFkaWFsR3JhZGllbnQgaWQ9InN1biIgY3g9IjIwJSIgY3k9IjE1JSIgcj0iMzUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzAwYzljOCIgc3RvcC1vcGFjaXR5PSIwLjI1Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAyMGIxOCIgc3RvcC1vcGFjaXR5PSIwIi8+CiAgICA8L3JhZGlhbEdyYWRpZW50PgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJza3kiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzAyMGIxOCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQwJSIgc3RvcC1jb2xvcj0iIzA2MWEzMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ijc1JSIgc3RvcC1jb2xvcj0iIzBhM2E1YyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMwZDdkOGMiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9IndhdGVyIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMwZDdkOGMiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDIwYjE4Ii8+CiAgICA8L2xpbmVhckdyYWRpZW50PgogICAgPGZpbHRlciBpZD0iYmx1cjEiPjxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjIiLz48L2ZpbHRlcj4KICAgIDxmaWx0ZXIgaWQ9ImJsdXIyIj48ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSIxIi8+PC9maWx0ZXI+CiAgPC9kZWZzPgoKICA8IS0tIFNreSAtLT4KICA8cmVjdCB3aWR0aD0iMTQ0MCIgaGVpZ2h0PSI4MTAiIGZpbGw9InVybCgjc2t5KSIvPgogIDwhLS0gU3VuIGdsb3cgLS0+CiAgPHJlY3Qgd2lkdGg9IjE0NDAiIGhlaWdodD0iODEwIiBmaWxsPSJ1cmwoI3N1bikiLz4KCiAgPCEtLSBTdGFycyAtLT4KICA8Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMS4yIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC43Ii8+CiAgPGNpcmNsZSBjeD0iMjUwIiBjeT0iMzAiIHI9IjAuOSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuNSIvPgogIDxjaXJjbGUgY3g9IjQwMCIgY3k9IjgwIiByPSIxLjQiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjYiLz4KICA8Y2lyY2xlIGN4PSI2MDAiIGN5PSIyMCIgcj0iMSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuOCIvPgogIDxjaXJjbGUgY3g9IjgwMCIgY3k9IjU1IiByPSIxLjIiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjUiLz4KICA8Y2lyY2xlIGN4PSIxMDAwIiBjeT0iMzUiIHI9IjAuOCIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuNyIvPgogIDxjaXJjbGUgY3g9IjEyMDAiIGN5PSI3MCIgcj0iMS4zIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iMTM1MCIgY3k9IjI1IiByPSIxIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC44Ii8+CiAgPGNpcmNsZSBjeD0iMTgwIiBjeT0iMTEwIiByPSIwLjgiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjQiLz4KICA8Y2lyY2xlIGN4PSI3MjAiIGN5PSI5MCIgcj0iMS4xIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iOTUwIiBjeT0iMTUiIHI9IjAuOSIgZmlsbD0iIzAwYzljOCIgb3BhY2l0eT0iMC44Ii8+CiAgPGNpcmNsZSBjeD0iMTEwMCIgY3k9IjEwMCIgcj0iMS4yIiBmaWxsPSIjMDBjOWM4IiBvcGFjaXR5PSIwLjYiLz4KCiAgPCEtLSBIb3Jpem9uIGdsb3cgLS0+CiAgPGVsbGlwc2UgY3g9IjcyMCIgY3k9IjQyMCIgcng9IjYwMCIgcnk9IjgwIiBmaWxsPSIjMDBjOWM4IiBvcGFjaXR5PSIwLjA2Ii8+CgogIDwhLS0gV2F0ZXIgc3VyZmFjZSAtLT4KICA8cmVjdCB4PSIwIiB5PSIzODAiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjQzMCIgZmlsbD0idXJsKCN3YXRlcikiIG9wYWNpdHk9IjAuOSIvPgoKICA8IS0tIFdhdmUgMSAtLT4KICA8cGF0aCBkPSJNMCw0MDAgUTEyMCwzODAgMjQwLDQwMCBRMzYwLDQyMCA0ODAsNDAwIFE2MDAsMzgwIDcyMCw0MDAgUTg0MCw0MjAgOTYwLDQwMCBRMTA4MCwzODAgMTIwMCw0MDAgUTEzMjAsNDIwIDE0NDAsNDAwIEwxNDQwLDQ0MCBMMCw0NDAgWiIKICAgICAgICBmaWxsPSIjMGQ3ZDhjIiBvcGFjaXR5PSIwLjQiLz4KICA8IS0tIFdhdmUgMiAtLT4KICA8cGF0aCBkPSJNMCw0MjAgUTE4MCw0MDAgMzYwLDQyMCBRNTQwLDQ0MCA3MjAsNDIwIFE5MDAsNDAwIDEwODAsNDIwIFExMjYwLDQ0MCAxNDQwLDQyMCBMMTQ0MCw0NjAgTDAsNDYwIFoiCiAgICAgICAgZmlsbD0iIzBhM2E1YyIgb3BhY2l0eT0iMC41Ii8+CiAgPCEtLSBXYXZlIHNoaW1tZXIgLS0+CiAgPHBhdGggZD0iTTAsMzkwIFE5MCwzODUgMTgwLDM5MCBRMjcwLDM5NSAzNjAsMzkwIFE0NTAsMzg1IDU0MCwzOTAgUTYzMCwzOTUgNzIwLDM5MCBRODEwLDM4NSA5MDAsMzkwIFE5OTAsMzk1IDEwODAsMzkwIFExMTcwLDM4NSAxMjYwLDM5MCBRMTM1MCwzOTUgMTQ0MCwzOTAiCiAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBjOWM4IiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zIi8+CiAgPHBhdGggZD0iTTAsNDMwIFExMjAsNDI1IDI0MCw0MzAgUTM2MCw0MzUgNDgwLDQzMCBRNjAwLDQyNSA3MjAsNDMwIFE4NDAsNDM1IDk2MCw0MzAgUTEwODAsNDI1IDEyMDAsNDMwIFExMzIwLDQzNSAxNDQwLDQzMCIKICAgICAgICBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM5YzgiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC4yIi8+CgogIDwhLS0gTW9vbi9MaWdodCByZWZsZWN0aW9uIG9uIHdhdGVyIC0tPgogIDxlbGxpcHNlIGN4PSIzMDAiIGN5PSI0ODAiIHJ4PSIxMjAiIHJ5PSIxNSIgZmlsbD0iIzAwYzljOCIgb3BhY2l0eT0iMC4wNyIvPgogIDxlbGxpcHNlIGN4PSIzMDAiIGN5PSI1MDAiIHJ4PSI4MCIgcnk9IjEwIiBmaWxsPSIjMDBjOWM4IiBvcGFjaXR5PSIwLjA1Ii8+CgogIDwhLS0gVW5kZXJ3YXRlciBjb3JhbCBzaWxob3VldHRlcyAtLT4KICA8IS0tIENvcmFsIDEgLS0+CiAgPHBhdGggZD0iTTgwLDgxMCBMODUsNzIwIFE5MCw3MDAgOTUsNzEwIEwxMDAsNzAwIFExMDUsNjkwIDExMCw3MDAgTDExNSw3MTAgUTEyMCw3MDAgMTI1LDY5MCBRMTMwLDY4MCAxMzUsNjkwIEwxNDAsNzAwIFExNDUsNjkwIDE1MCw2ODAgUTE1NSw2NzAgMTYwLDY4MCBMMTY1LDcwMCBRMTcwLDcxMCAxNzUsNzIwIEwxODAsODEwIFoiCiAgICAgICAgZmlsbD0iIzBkN2Q4YyIgb3BhY2l0eT0iMC41Ii8+CiAgPCEtLSBDb3JhbCAyIC0tPgogIDxwYXRoIGQ9Ik0xMjYwLDgxMCBMMTI2NSw3MzAgUTEyNzAsNzE1IDEyNzUsNzIwIEwxMjgwLDcxMCBRMTI4NSw3MDAgMTI5MCw3MDggTDEyOTUsNzE4IFExMzAwLDcwOCAxMzA1LDcwMCBRMTMxMCw2OTIgMTMxNSw3MDAgTDEzMjAsNzEyIFExMzI1LDcyMCAxMzMwLDczMCBMMTMzNSw4MTAgWiIKICAgICAgICBmaWxsPSIjMGQ3ZDhjIiBvcGFjaXR5PSIwLjQ1Ii8+CiAgPCEtLSBTZWF3ZWVkIGxlZnQgLS0+CiAgPHBhdGggZD0iTTUwLDgxMCBRNTUsNzcwIDQ4LDc0MCBRNDIsNzEwIDUyLDY4MCBRNjAsNjUwIDUwLDYyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMGQ3ZDhjIiBzdHJva2Utd2lkdGg9IjQiIG9wYWNpdHk9IjAuNCIvPgogIDxwYXRoIGQ9Ik02NSw4MTAgUTcwLDc2MCA2Miw3MzAgUTU2LDcwMCA2Niw2NzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzBkN2Q4YyIgc3Ryb2tlLXdpZHRoPSIzIiBvcGFjaXR5PSIwLjMiLz4KICA8IS0tIFNlYXdlZWQgcmlnaHQgLS0+CiAgPHBhdGggZD0iTTEzOTAsODEwIFExMzg1LDc3MCAxMzkyLDc0MCBRMTM5OCw3MTAgMTM4OCw2ODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzBkN2Q4YyIgc3Ryb2tlLXdpZHRoPSI0IiBvcGFjaXR5PSIwLjQiLz4KCiAgPCEtLSBCdWJibGVzIC0tPgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjYwMCIgcj0iNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBjOWM4IiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuNCIvPgogIDxjaXJjbGUgY3g9IjIxMCIgY3k9IjU3MCIgcj0iMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBjOWM4IiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuMyIvPgogIDxjaXJjbGUgY3g9IjE5NSIgY3k9IjU0NSIgcj0iNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDBjOWM4IiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuMjUiLz4KICA8Y2lyY2xlIGN4PSIxMjQwIiBjeT0iNjIwIiByPSIzIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGM5YzgiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC4zNSIvPgogIDxjaXJjbGUgY3g9IjEyNTAiIGN5PSI1OTUiIHI9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwYzljOCIgc3Ryb2tlLXdpZHRoPSIxIiBvcGFjaXR5PSIwLjMiLz4KCiAgPCEtLSBGaXNoIHNpbGhvdWV0dGVzIC0tPgogIDwhLS0gRmlzaCAxIC0tPgogIDxlbGxpcHNlIGN4PSIzMjAiIGN5PSI2NTAiIHJ4PSIxOCIgcnk9IjciIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMjUiLz4KICA8cGF0aCBkPSJNMzM4LDY1MCBMMzUwLDY0MiBMMzUwLDY1OCBaIiBmaWxsPSIjMDBjOWM4IiBvcGFjaXR5PSIwLjI1Ii8+CiAgPCEtLSBGaXNoIDIgLS0+CiAgPGVsbGlwc2UgY3g9IjExMDAiIGN5PSI2ODAiIHJ4PSIxNCIgcnk9IjUiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMiIvPgogIDxwYXRoIGQ9Ik0xMDg2LDY4MCBMMTA3Niw2NzUgTDEwNzYsNjg1IFoiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMiIvPgogIDwhLS0gRmlzaCAzIHNtYWxsIC0tPgogIDxlbGxpcHNlIGN4PSI2ODAiIGN5PSI3MjAiIHJ4PSI5IiByeT0iNCIgZmlsbD0iIzAwYzljOCIgb3BhY2l0eT0iMC4xOCIvPgogIDxwYXRoIGQ9Ik02ODksNzIwIEw2OTcsNzE2IEw2OTcsNzI0IFoiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMTgiLz4KCiAgPCEtLSBDeWFuIHBhcnRpY2xlcyAvIHBsYW5rdG9uIC0tPgogIDxjaXJjbGUgY3g9IjQwMCIgY3k9IjUwMCIgcj0iMiIgZmlsbD0iIzAwYzljOCIgb3BhY2l0eT0iMC4zIi8+CiAgPGNpcmNsZSBjeD0iNjAwIiBjeT0iNjIwIiByPSIxLjUiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMjUiLz4KICA8Y2lyY2xlIGN4PSI5MDAiIGN5PSI1NTAiIHI9IjIiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMyIvPgogIDxjaXJjbGUgY3g9IjExNTAiIGN5PSI0ODAiIHI9IjEuNSIgZmlsbD0iIzAwYzljOCIgb3BhY2l0eT0iMC4yIi8+CiAgPGNpcmNsZSBjeD0iNzUwIiBjeT0iNzAwIiByPSIyLjUiIGZpbGw9IiMwMGM5YzgiIG9wYWNpdHk9IjAuMiIvPgo8L3N2Zz4=") center/cover no-repeat;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(2,11,24,.88) 0%, rgba(10,58,92,.6) 60%, rgba(0,201,200,.08) 100%);
+    }
+    .hero-particles {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        radial-gradient(1.5px 1.5px at 20% 30%, rgba(0,201,200,.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 20%, rgba(0,201,200,.35) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 50% 70%, rgba(0,201,200,.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 85%, rgba(0,201,200,.3) 0%, transparent 100%);
+      animation: drift 12s ease-in-out infinite alternate;
+    }
+    @keyframes drift { from{transform:translateY(0)} to{transform:translateY(-14px)} }
+
+    .hero-content {
+      position: relative; z-index: 2; text-align: center;
+      max-width: 820px; padding: 2rem;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(0,201,200,.15); border: 1px solid rgba(0,201,200,.35);
+      color: var(--cyan); font-size: .85rem; font-weight: 600;
+      padding: .4rem 1rem; border-radius: 100px; margin-bottom: 1.8rem;
+      animation: pulse-badge 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-badge { 0%,100%{box-shadow:0 0 0 0 rgba(0,201,200,.3)} 50%{box-shadow:0 0 0 8px rgba(0,201,200,0)} }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #f05; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50%{opacity:0} }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 900; line-height: 1.15;
+      color: var(--white); margin-bottom: 1.2rem;
+      text-shadow: 0 4px 24px rgba(0,0,0,.5);
+    }
+    .hero h1 span { color: var(--cyan); }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text);
+      line-height: 1.75; margin-bottom: 2.2rem; max-width: 600px; margin-inline: auto;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--cyan) 100%);
+      color: var(--deep); font-weight: 700; font-size: 1rem;
+      padding: .85rem 2rem; border-radius: 50px; text-decoration: none;
+      box-shadow: 0 8px 28px rgba(0,201,200,.3); transition: all .25s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(0,201,200,.45); }
+    .btn-secondary {
+      display: inline-block;
+      background: rgba(255,255,255,.08); border: 1.5px solid rgba(0,201,200,.35);
+      color: var(--white); font-weight: 600; font-size: 1rem;
+      padding: .85rem 2rem; border-radius: 50px; text-decoration: none; transition: all .25s;
+    }
+    .btn-secondary:hover { background: rgba(0,201,200,.15); border-color: var(--cyan); }
+
+    .hero-logo-stamp {
+      margin-bottom: 1.5rem;
+    }
+    .hero-logo-stamp img {
+      height: 72px; width: 72px; object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(0,201,200,.5));
+      animation: bob 4s ease-in-out infinite;
+    }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .hero-wave svg { display: block; width: 100%; }
+
+    /* ── TICKER ── */
+    .ticker-wrap {
+      background: linear-gradient(90deg, rgba(13,125,140,.9), rgba(0,201,200,.15));
+      border-bottom: 1px solid rgba(0,201,200,.2);
+      display: flex; align-items: center; overflow: hidden;
+      height: 46px;
+    }
+    .ticker-label {
+      background: #e63946; color: #fff; font-size: .78rem; font-weight: 700;
+      padding: 0 1.1rem; height: 100%; display: flex; align-items: center;
+      white-space: nowrap; letter-spacing: .5px; flex-shrink: 0;
+    }
+    .ticker-track {
+      display: flex; animation: scroll-rtl 32s linear infinite;
+      white-space: nowrap; align-items: center; height: 100%;
+    }
+    .ticker-track span { padding: 0 2rem; font-size: .88rem; color: var(--foam); }
+    @keyframes scroll-rtl { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── STATS ── */
+    .stats-section { padding: 5rem 0 4rem; }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,.15);
+      border-radius: var(--r); padding: 2rem 1.5rem; text-align: center;
+      backdrop-filter: blur(8px);
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .stat-card:hover { transform: translateY(-4px); border-color: var(--cyan); box-shadow: var(--glow); }
+    .stat-num {
+      font-size: 2.8rem; font-weight: 900; color: var(--cyan);
+      line-height: 1; margin-bottom: .5rem;
+    }
+    .stat-label { font-size: .9rem; color: var(--muted); line-height: 1.5; }
+    .stat-icon { font-size: 1.8rem; margin-bottom: .8rem; }
+
+    /* ── SECTION ── */
+    .section { padding: 5rem 0; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2.5rem;
+    }
+    .section-header h2 {
+      font-size: 1.8rem; font-weight: 800; color: var(--white);
+      position: relative;
+    }
+    .section-header h2::after {
+      content: ''; display: block; width: 48px; height: 3px;
+      background: linear-gradient(90deg, var(--cyan), transparent);
+      margin-top: .5rem; border-radius: 2px;
+    }
+    .view-all {
+      color: var(--cyan); text-decoration: none; font-size: .9rem; font-weight: 600;
+      display: flex; align-items: center; gap: .4rem; transition: gap .2s;
+    }
+    .view-all:hover { gap: .7rem; }
+
+    /* ── NEWS GRID ── */
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px,1fr)); gap: 1.8rem; }
+    .news-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(0,201,200,.12);
+      border-radius: var(--r); overflow: hidden;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      cursor: pointer; text-decoration: none; display: block; color: inherit;
+    }
+    .news-card:hover { transform: translateY(-5px); border-color: rgba(0,201,200,.45); box-shadow: var(--glow); }
+    .news-card-img {
+      width: 100%; height: 210px; object-fit: cover; display: block;
+      transition: transform .4s;
+    }
+    .news-card:hover .news-card-img { transform: scale(1.04); }
+    .news-card-img-wrap { overflow: hidden; position: relative; }
+    .news-card-tag {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(0,201,200,.9); color: var(--deep);
+      font-size: .72rem; font-weight: 700; padding: .25rem .7rem; border-radius: 100px;
+    }
+    .news-card-body { padding: 1.3rem; }
+    .news-meta { display: flex; align-items: center; gap: .8rem; margin-bottom: .7rem; }
+    .news-date { font-size: .78rem; color: var(--muted); }
+    .news-source {
+      font-size: .72rem; background: rgba(0,201,200,.1);
+      color: var(--cyan); padding: .2rem .55rem; border-radius: 4px; font-weight: 600;
+    }
+    .news-title {
+      font-size: 1.05rem; font-weight: 700; color: var(--white);
+      line-height: 1.5; margin-bottom: .7rem;
+    }
+    .news-excerpt { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+    .news-card-footer {
+      padding: .9rem 1.3rem; border-top: 1px solid rgba(255,255,255,.06);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .read-more { color: var(--cyan); font-size: .85rem; font-weight: 600; }
+    .news-views { font-size: .8rem; color: var(--muted); }
+
+    /* ── FEATURED IMAGE SECTION ── */
+    .featured-section { padding: 5rem 0; }
+    .featured-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .featured-main { grid-row: 1 / 3; position: relative; border-radius: var(--r); overflow: hidden; }
+    .featured-main img { width: 100%; height: 100%; min-height: 420px; object-fit: cover; display: block; transition: transform .5s; }
+    .featured-main:hover img { transform: scale(1.04); }
+    .featured-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(2,11,24,.95) 0%, transparent 100%);
+      padding: 2.5rem 1.8rem 1.8rem;
+    }
+    .featured-caption-tag {
+      display: inline-block; background: var(--cyan); color: var(--deep);
+      font-size: .72rem; font-weight: 700; padding: .22rem .7rem; border-radius: 100px; margin-bottom: .6rem;
+    }
+    .featured-caption h3 { font-size: 1.3rem; font-weight: 800; color: var(--white); line-height: 1.4; }
+    .featured-caption p { font-size: .85rem; color: var(--text); margin-top: .4rem; }
+
+    .featured-side { position: relative; border-radius: var(--r); overflow: hidden; min-height: 195px; }
+    .featured-side img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
+    .featured-side:hover img { transform: scale(1.05); }
+    .featured-side .featured-caption { padding: 1.8rem 1.4rem 1.2rem; }
+    .featured-side .featured-caption h3 { font-size: 1rem; }
+
+    /* ── MAP SECTION ── */
+    .map-section {
+      background: linear-gradient(135deg, rgba(10,58,92,.6) 0%, rgba(13,125,140,.2) 100%);
+      border-top: 1px solid rgba(0,201,200,.12);
+      border-bottom: 1px solid rgba(0,201,200,.12);
+      padding: 5rem 0;
+    }
+    .map-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .map-text h2 { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 1rem; }
+    .map-text p { color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem; font-size: 1rem; }
+    .map-features { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 2rem; }
+    .map-feat {
+      display: flex; align-items: center; gap: .75rem;
+      font-size: .92rem; color: var(--text);
+    }
+    .map-feat-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .dot-red { background: #e63946; box-shadow: 0 0 6px #e63946; }
+    .dot-green { background: #2dc653; box-shadow: 0 0 6px #2dc653; }
+    .dot-yellow { background: #f4a261; box-shadow: 0 0 6px #f4a261; }
+    .map-visual { position: relative; }
+    .map-img-wrap { border-radius: var(--r); overflow: hidden; border: 1px solid rgba(0,201,200,.2); box-shadow: var(--glow); }
+    .map-img-wrap img { width: 100%; display: block; }
+    .map-overlay-badge {
+      position: absolute; top: 16px; left: 16px;
+      background: rgba(2,11,24,.9); border: 1px solid rgba(0,201,200,.3);
+      color: var(--cyan); font-size: .8rem; font-weight: 700;
+      padding: .5rem 1rem; border-radius: 8px; backdrop-filter: blur(8px);
+    }
+
+    /* ── AI SECTION ── */
+    .ai-section { padding: 5rem 0; }
+    .ai-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .ai-text h2 { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 1rem; }
+    .ai-text p { color: var(--muted); line-height: 1.75; margin-bottom: 2rem; font-size: 1rem; }
+    .ai-features { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-bottom: 2rem; }
+    .ai-feat {
+      background: rgba(0,201,200,.07); border: 1px solid rgba(0,201,200,.15);
+      border-radius: 10px; padding: .9rem;
+    }
+    .ai-feat-icon { font-size: 1.3rem; margin-bottom: .4rem; }
+    .ai-feat-title { font-size: .82rem; font-weight: 700; color: var(--white); }
+    .ai-feat-desc { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+
+    .chat-window {
+      background: rgba(6,26,48,.9); border: 1px solid rgba(0,201,200,.2);
+      border-radius: var(--r); overflow: hidden; box-shadow: var(--glow);
+    }
+    .chat-header {
+      background: rgba(13,125,140,.3); padding: 1rem 1.3rem;
+      display: flex; align-items: center; gap: .75rem;
+      border-bottom: 1px solid rgba(0,201,200,.15);
+    }
+    .chat-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+    }
+    .chat-title { font-weight: 700; color: var(--white); font-size: .95rem; }
+    .chat-status { font-size: .75rem; color: #2dc653; display: flex; align-items: center; gap: .3rem; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #2dc653; animation: pulse-g 2s infinite; }
+    @keyframes pulse-g { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .chat-messages { padding: 1.3rem; display: flex; flex-direction: column; gap: 1rem; }
+    .msg { display: flex; gap: .7rem; max-width: 90%; }
+    .msg.user { flex-direction: row-reverse; margin-right: auto; margin-left: 0; }
+    .msg-bubble {
+      padding: .75rem 1rem; border-radius: 14px; font-size: .88rem; line-height: 1.55;
+    }
+    .msg.bot .msg-bubble {
+      background: rgba(13,125,140,.25); border: 1px solid rgba(0,201,200,.15);
+      color: var(--text); border-radius: 14px 14px 14px 4px;
+    }
+    .msg.user .msg-bubble {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-weight: 600; border-radius: 14px 14px 4px 14px;
+    }
+    .msg-icon { font-size: 1.2rem; margin-top: .2rem; flex-shrink: 0; }
+    .typing-dots span {
+      display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--cyan); margin: 0 2px;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    /* ── PHOTO GALLERY ── */
+    .gallery-section { padding: 5rem 0; }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 220px 220px;
+      gap: 1rem;
+    }
+    .gallery-item { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; }
+    .gallery-item:first-child { grid-column: span 2; grid-row: span 2; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
+    .gallery-item:hover img { transform: scale(1.07); }
+    .gallery-item-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(2,11,24,.85) 0%, transparent 55%);
+      opacity: 0; transition: opacity .3s;
+      display: flex; align-items: flex-end; padding: 1rem;
+    }
+    .gallery-item:hover .gallery-item-overlay { opacity: 1; }
+    .gallery-item-label { color: var(--white); font-size: .85rem; font-weight: 600; }
+
+    /* ── PARTNERS / LOGOS ── */
+    .partners-section {
+      padding: 3.5rem 0;
+      border-top: 1px solid rgba(0,201,200,.08);
+      border-bottom: 1px solid rgba(0,201,200,.08);
+    }
+    .partners-label { text-align: center; font-size: .82rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 2rem; }
+    .partners-row { display: flex; align-items: center; justify-content: center; gap: 2.5rem; flex-wrap: wrap; }
+    .partner-badge {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(0,201,200,.12);
+      padding: .75rem 1.8rem; border-radius: 10px;
+      color: var(--muted); font-size: .88rem; font-weight: 600; letter-spacing: .3px;
+      transition: all .2s;
+    }
+    .partner-badge:hover { color: var(--cyan); border-color: rgba(0,201,200,.35); }
+
+    /* ── NEWSLETTER ── */
+    .newsletter-section {
+      padding: 5rem 0;
+      background: linear-gradient(135deg, rgba(13,125,140,.2), rgba(0,201,200,.05));
+      border-radius: 24px; margin: 0 1.5rem 5rem;
+      text-align: center;
+    }
+    .newsletter-section h2 { font-size: 1.9rem; font-weight: 800; color: var(--white); margin-bottom: .8rem; }
+    .newsletter-section p { color: var(--muted); margin-bottom: 2rem; font-size: 1rem; }
+    .newsletter-form { display: flex; gap: .75rem; justify-content: center; max-width: 480px; margin: 0 auto; }
+    .newsletter-input {
+      flex: 1; background: rgba(255,255,255,.06); border: 1px solid rgba(0,201,200,.25);
+      color: var(--white); padding: .9rem 1.2rem; border-radius: 10px;
+      font-family: inherit; font-size: .95rem; outline: none;
+    }
+    .newsletter-input::placeholder { color: var(--muted); }
+    .newsletter-input:focus { border-color: var(--cyan); }
+    .newsletter-btn {
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-weight: 700; font-size: .95rem; font-family: inherit;
+      padding: .9rem 1.8rem; border: none; border-radius: 10px; cursor: pointer;
+      white-space: nowrap; transition: opacity .2s;
+    }
+    .newsletter-btn:hover { opacity: .85; }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: rgba(2,11,24,.98);
+      border-top: 1px solid rgba(0,201,200,.12);
+      padding: 4rem 0 2rem;
+    }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
+    .footer-logo {
+      display: flex; align-items: center; gap: .8rem; margin-bottom: 1rem;
+    }
+    .footer-logo-img {
+      height: 56px; width: 56px; object-fit: contain;
+      /* original colors */
+    }
+    .footer-logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .footer-logo-name { font-size: 1.1rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .footer-logo-sub  { font-size: .68rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .footer-desc { color: var(--muted); font-size: .88rem; line-height: 1.7; }
+    .footer h4 { color: var(--white); font-size: .95rem; font-weight: 700; margin-bottom: 1rem; }
+    .footer ul { list-style: none; display: flex; flex-direction: column; gap: .55rem; }
+    .footer ul li a { color: var(--muted); text-decoration: none; font-size: .87rem; transition: color .2s; }
+    .footer ul li a:hover { color: var(--cyan); }
+    .footer ul li { color: var(--muted); font-size: .87rem; }
+    .social-links { display: flex; gap: .7rem; margin-top: 1.2rem; }
+    .social-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(0,201,200,.1); border: 1px solid rgba(0,201,200,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; text-decoration: none; transition: all .2s;
+    }
+    .social-btn:hover { background: rgba(0,201,200,.25); border-color: var(--cyan); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.06);
+      padding-top: 1.5rem; text-align: center;
+    }
+    .footer-bottom p { color: var(--muted); font-size: .83rem; }
+
+    /* ── SCROLL TO TOP ── */
+    .scroll-top {
+      position: fixed; bottom: 2rem; left: 2rem; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      color: var(--deep); font-size: 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; box-shadow: 0 4px 16px rgba(0,201,200,.4);
+      opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    .scroll-top.visible { opacity: 1; pointer-events: all; }
+    .scroll-top:hover { transform: scale(1.1); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px) {
+      .map-inner, .ai-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+      .featured-grid { grid-template-columns: 1fr; }
+      .featured-main { grid-row: auto; }
+      .gallery-grid { grid-template-columns: repeat(2,1fr); grid-template-rows: repeat(3,160px); }
+      .gallery-item:first-child { grid-column: span 2; grid-row: auto; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    }
+    @media(max-width:640px) {
+      .nav-links { display: none; }
+      .news-grid { grid-template-columns: 1fr; }
+      .gallery-grid { grid-template-columns: 1fr; grid-template-rows: repeat(5, 180px); }
+      .gallery-item:first-child { grid-column: auto; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .newsletter-form { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="logo">
+        <img src="logo.jpg" alt="Med Mosaic Marine Journalism" class="logo-img" />
+        <div class="logo-text">
+          <span class="logo-name">MED MOSAIC</span>
+          <span class="logo-sub">Marine Journalism</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="news.html">News</a></li>
+        <li><a href="map.html">Map</a></li>
+        <li><a href="chatbot.html">AI Assistant</a></li>
+        <li><a href="comments.html">Comments</a></li>
+      </ul>
+      <div class="nav-actions">
+        <div class="lang-switcher">
+          <button onclick="setLang('ar')" class="lang-btn" id="lb-ar">AR</button>
+          <button onclick="setLang('fr')" class="lang-btn" id="lb-fr">FR</button>
+          <button onclick="setLang('en')" class="lang-btn active" id="lb-en">EN</button>
+        </div>
+        <a href="login.html" class="btn-login">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-particles"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        🌊 Breaking Marine News &nbsp; June 2025
+      </div>
+      <h1>Protecting <span>Our Oceans</span><br/>Our Shared Responsibility</h1>
+      <p>Latest news and scientific reports on marine ecosystems, pollution, and biodiversity conservation in Morocco and worldwide.</p>
+      <div class="hero-btns">
+        <a href="news.html" class="btn-primary">Explore News</a>
+        <a href="chatbot.html" class="btn-secondary">🤖 Talk to AI Assistant</a>
+      </div>
+    </div>
+    <div class="hero-wave">
+      <svg viewBox="0 0 1440 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,35 C240,70 480,0 720,35 C960,70 1200,0 1440,35 L1440,70 L0,70 Z" fill="#020b18"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- BREAKING TICKER -->
+  <div class="ticker-wrap">
+    <span class="ticker-label">⚡ BREAKING</span>
+    <div class="ticker-track">
+      <span>🔴 Ocean temperatures rise 2.1° over the past decade &nbsp;|&nbsp; 🔴 New coral reefs discovered in the Red Sea &nbsp;|&nbsp; 🔴 International summit on Pacific plastic pollution &nbsp;|&nbsp; 🔴 Morocco beach cleanup removes 50 tons of waste &nbsp;|&nbsp; 🔴 Study: 40% of fish contain microplastic particles &nbsp;|&nbsp; 🔴 Morocco launches new marine reserve near Agadir 2025</span>
+      <span>🔴 Ocean temperatures rise 2.1° over the past decade &nbsp;|&nbsp; 🔴 New coral reefs discovered in the Red Sea &nbsp;|&nbsp; 🔴 International summit on Pacific plastic pollution &nbsp;|&nbsp; 🔴 Morocco beach cleanup removes 50 tons of waste &nbsp;|&nbsp; 🔴 Study: 40% of fish contain microplastic particles &nbsp;|&nbsp; 🔴 Morocco launches new marine reserve near Agadir 2025</span>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🌍</div>
+          <div class="stat-num" data-target="71">0%</div>
+          <div class="stat-label">of Earth's surface covered by oceans</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">♻️</div>
+          <div class="stat-num" data-target="8">0M</div>
+          <div class="stat-label">tons of plastic enter oceans every year</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🪸</div>
+          <div class="stat-num" data-target="50">0%</div>
+          <div class="stat-label">of coral reefs are threatened with extinction</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌡️</div>
+          <div class="stat-num">2.4°</div>
+          <div class="stat-label">average ocean temperature rise since 1900</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🐠</div>
+          <div class="stat-num" data-target="240">0K</div>
+          <div class="stat-label">marine species discovered so far</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED STORIES -->
+  <section class="featured-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Featured Stories</h2>
+        <a href="news.html" class="view-all">View All →</a>
+      </div>
+      <div class="featured-grid">
+        <!-- MAIN STORY -->
+        <a href="article.html" class="featured-main news-card">
+          <img
+            src="https://picsum.photos/seed/reef/900/600"
+            alt="Fish swimming in coral reefs"
+            class="news-card-img"
+            loading="lazy"
+          />
+          <div class="featured-caption">
+            <span class="featured-caption-tag">🪸 Marine Ecology</span>
+            <h3>Coral Reefs: Cities of the Ocean Under Climate Threat</h3>
+            <p>Coral reefs cover less than 1% of the ocean floor, yet shelter over 25% of all marine species. An investigation into global warming risks.</p>
+          </div>
+        </a>
+
+        <!-- SIDE 1 -->
+        <a href="article.html" class="featured-side news-card">
+          <img
+            src="https://picsum.photos/seed/plastic/700/500"
+            alt="Plastic pollution at sea"
+            class="news-card-img"
+            style="height:100%"
+            loading="lazy"
+          />
+          <div class="featured-caption">
+            <span class="featured-caption-tag">🚨 Pollution</span>
+            <h3>8 Million Tons of Plastic Choking Our Oceans Every Year</h3>
+            <p>UN Report 2025</p>
+          </div>
+        </a>
+
+        <!-- SIDE 2 -->
+        <a href="article.html" class="featured-side news-card">
+          <img
+            src="https://picsum.photos/seed/dolphin/700/500"
+            alt="Dolphins in the Atlantic Ocean"
+            class="news-card-img"
+            style="height:100%"
+            loading="lazy"
+          />
+          <div class="featured-caption">
+            <span class="featured-caption-tag">🐬 Marine Life</span>
+            <h3>Dolphins Return to Agadir Shores After Years of Absence</h3>
+            <p>Groups of spotted dolphins spotted near the Moroccan coast</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LATEST NEWS CARDS -->
+  <section class="section" style="padding-top:0">
+    <div class="container">
+      <div class="section-header">
+        <h2>Latest News</h2>
+        <a href="news.html" class="view-all">More →</a>
+      </div>
+      <div class="news-grid" id="news-grid">
+
+        <a href="article.html" class="news-card">
+          <div class="news-card-img-wrap">
+            <img
+              src="https://picsum.photos/seed/oil/600/400"
+              alt="Oil pollution at sea"
+              class="news-card-img" loading="lazy"
+            />
+            <span class="news-card-tag">⚠️ Alert</span>
+          </div>
+          <div class="news-card-body">
+            <div class="news-meta">
+              <span class="news-date">June 15, 2025</span>
+              <span class="news-source">Reuters</span>
+            </div>
+            <div class="news-title">Oil Spill Threatens Morocco's Northern Coast — Emergency Teams Mobilized</div>
+            <div class="news-excerpt">Moroccan environmental authorities deploy rapid response teams to contain an oil spill detected near the Strait of Gibraltar, fearing it may reach the coastline.</div>
+          </div>
+          <div class="news-card-footer">
+            <span class="read-more">Read More →</span>
+            <span class="news-views">👁 3.4K</span>
+          </div>
+        </a>
+
+        <a href="article.html" class="news-card">
+          <div class="news-card-img-wrap">
+            <img
+              src="https://picsum.photos/seed/nature/600/400"
+              alt="Calm sea and nature reserve"
+              class="news-card-img" loading="lazy"
+            />
+            <span class="news-card-tag">🌿 Conservation</span>
+          </div>
+          <div class="news-card-body">
+            <div class="news-meta">
+              <span class="news-date">June 12, 2025</span>
+              <span class="news-source">Morocco Environment Agency</span>
+            </div>
+            <div class="news-title">Morocco Expands Marine Protected Areas to 10% of Territorial Waters</div>
+            <div class="news-excerpt">A historic announcement raising Morocco's marine protected area coverage ahead of COP30, scheduled to be held in Marrakech.</div>
+          </div>
+          <div class="news-card-footer">
+            <span class="read-more">Read More →</span>
+            <span class="news-views">👁 2.1K</span>
+          </div>
+        </a>
+
+        <a href="article.html" class="news-card">
+          <div class="news-card-img-wrap">
+            <img
+              src="https://picsum.photos/seed/beach/600/400"
+              alt="Moroccan Atlantic beach"
+              class="news-card-img" loading="lazy"
+            />
+            <span class="news-card-tag">🏖️ Tourism</span>
+          </div>
+          <div class="news-card-body">
+            <div class="news-meta">
+              <span class="news-date">June 9, 2025</span>
+              <span class="news-source">Mubashir Morocco</span>
+            </div>
+            <div class="news-title">Agadir Beaches Awarded European Blue Flag for the Third Consecutive Year</div>
+            <div class="news-excerpt">International recognition for Agadir's water quality and cleanliness, reflecting sustained efforts by the municipality and civil society to protect the coastal ecosystem.</div>
+          </div>
+          <div class="news-card-footer">
+            <span class="read-more">Read More →</span>
+            <span class="news-views">👁 5.7K</span>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- PHOTO GALLERY -->
+  <section class="gallery-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Photo Gallery</h2>
+        <span style="color:var(--muted);font-size:.88rem">Real images from our marine environment</span>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="https://picsum.photos/seed/reef/900/600" alt="Underwater world" loading="lazy"/>
+          <div class="gallery-item-overlay"><span class="gallery-item-label">🐟 Marine Life in the Atlantic Ocean</span></div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://picsum.photos/seed/sea/600/400" alt="Sea pollution" loading="lazy"/>
+          <div class="gallery-item-overlay"><span class="gallery-item-label">🚨 Impact of Plastic on Marine Life</span></div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://picsum.photos/seed/beach/600/400" alt="Agadir beach" loading="lazy"/>
+          <div class="gallery-item-overlay"><span class="gallery-item-label">🏖️ Agadir Beach — Moroccan Coast</span></div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://picsum.photos/seed/wave/600/400" alt="Dolphins" loading="lazy"/>
+          <div class="gallery-item-overlay"><span class="gallery-item-label">🐬 Atlantic Dolphins</span></div>
+        </div>
+        <div class="gallery-item">
+          <img src="https://picsum.photos/seed/nature/600/400" alt="Marine reserve" loading="lazy"/>
+          <div class="gallery-item-overlay"><span class="gallery-item-label">🌿 Natural Marine Reserve</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP SECTION -->
+  <section class="map-section">
+    <div class="container">
+      <div class="map-inner">
+        <div class="map-text">
+          <h2>Interactive Marine Pollution Map</h2>
+          <p>Explore in real time pollution zones, environmental monitoring stations, and conservation efforts along the Moroccan coast and territorial waters.</p>
+          <div class="map-features">
+            <div class="map-feat">
+              <div class="map-feat-dot dot-red"></div>
+              Pollution zones and reported environmental incidents
+            </div>
+            <div class="map-feat">
+              <div class="map-feat-dot dot-green"></div>
+              Marine protected areas and nature reserves
+            </div>
+            <div class="map-feat">
+              <div class="map-feat-dot dot-yellow"></div>
+              Monitoring stations and data collection centers
+            </div>
+          </div>
+          <a href="map.html" class="btn-primary">🗺️ Open Interactive Map</a>
+        </div>
+        <div class="map-visual">
+          <div class="map-img-wrap">
+            <img src="https://picsum.photos/seed/earth/700/450" alt="Environmental map" loading="lazy"/>
+          </div>
+          <div class="map-overlay-badge">🟢 Live Update</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI SECTION -->
+  <section class="ai-section">
+    <div class="container">
+      <div class="ai-inner">
+        <div class="chat-window">
+          <div class="chat-header">
+            <div class="chat-avatar">🤖</div>
+            <div>
+              <div class="chat-title">Marine Eco Assistant</div>
+              <div class="chat-status"><span class="status-dot"></span> Online now</div>
+            </div>
+          </div>
+          <div class="chat-messages">
+            <div class="msg bot">
+              <span class="msg-icon">🤖</span>
+              <div class="msg-bubble">Hi! I'm the Marine Eco Assistant. I can answer your questions about oceans, marine life and pollution. How can I help you?</div>
+            </div>
+            <div class="msg user">
+              <span class="msg-icon">👤</span>
+              <div class="msg-bubble">What causes coral bleaching?</div>
+            </div>
+            <div class="msg bot">
+              <span class="msg-icon">🤖</span>
+              <div class="msg-bubble">Coral bleaching occurs when water temperatures rise above normal for weeks. Corals expel the symbiotic algae that give them color and supply 90% of their food, turning white. If thermal stress continues, the corals die.</div>
+            </div>
+            <div class="msg user">
+              <span class="msg-icon">👤</span>
+              <div class="msg-bubble">How can we protect them?</div>
+            </div>
+            <div class="msg bot">
+              <span class="msg-icon">🤖</span>
+              <div class="msg-bubble"><span class="typing-dots"><span></span><span></span><span></span></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="ai-text">
+          <h2>Marine AI Assistant</h2>
+          <p>Ask anything about the marine environment. Our assistant is powered by the latest AI models and replies instantly in Arabic, French, or English.</p>
+          <div class="ai-features">
+            <div class="ai-feat">
+              <div class="ai-feat-icon">🪸</div>
+              <div class="ai-feat-title">Coral Reefs</div>
+              <div class="ai-feat-desc">Up-to-date scientific info</div>
+            </div>
+            <div class="ai-feat">
+              <div class="ai-feat-icon">🐋</div>
+              <div class="ai-feat-title">Marine Mammals</div>
+              <div class="ai-feat-desc">Whales, dolphins & more</div>
+            </div>
+            <div class="ai-feat">
+              <div class="ai-feat-icon">⚠️</div>
+              <div class="ai-feat-title">Pollution & Crises</div>
+              <div class="ai-feat-desc">Causes and scientific solutions</div>
+            </div>
+            <div class="ai-feat">
+              <div class="ai-feat-icon">🌡️</div>
+              <div class="ai-feat-title">Climate Change</div>
+              <div class="ai-feat-desc">Its impact on the oceans</div>
+            </div>
+          </div>
+          <a href="chatbot.html" class="btn-primary">Start Chatting Now</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNERS -->
+  <section class="partners-section">
+    <div class="container">
+      <div class="partners-label">OUR PARTNERS & INFORMATION SOURCES</div>
+      <div class="partners-row">
+        <div class="partner-badge">🇲🇦 Morocco Ministry of Environment</div>
+        <div class="partner-badge">🌊 UNESCO Ocean</div>
+        <div class="partner-badge">🔬 INRH Agadir</div>
+        <div class="partner-badge">🌍 UNEP</div>
+        <div class="partner-badge">🐬 WWF Morocco</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <div class="container">
+    <section class="newsletter-section">
+      <h2>📩 Stay Informed</h2>
+      <p>Subscribe to our weekly newsletter and receive the latest marine environment news directly in your inbox.</p>
+      <div class="newsletter-form">
+        <input type="email" class="newsletter-input" placeholder="Your email address..." />
+        <button class="newsletter-btn" onclick="handleSubscribe(this)">Subscribe</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-logo">
+            <img src="logo.jpg" alt="Med Mosaic" class="footer-logo-img" />
+            <div class="footer-logo-text">
+              <span class="footer-logo-name">MED MOSAIC</span>
+              <span class="footer-logo-sub">Marine Journalism</span>
+            </div>
+          </div>
+          <p class="footer-desc">A specialized news platform covering marine environment and ocean news, dedicated to raising environmental awareness in Morocco and beyond.</p>
+          <div class="social-links">
+            <a href="#" class="social-btn">𝕏</a>
+            <a href="#" class="social-btn">f</a>
+            <a href="#" class="social-btn">in</a>
+            <a href="#" class="social-btn">▶</a>
+          </div>
+        </div>
+        <div>
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="news.html">Marine News</a></li>
+            <li><a href="map.html">Interactive Map</a></li>
+            <li><a href="chatbot.html">AI Assistant</a></li>
+            <li><a href="comments.html">Comments</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Topics</h4>
+          <ul>
+            <li><a href="#">Ocean Pollution</a></li>
+            <li><a href="#">Coral Reefs</a></li>
+            <li><a href="#">Climate Change</a></li>
+            <li><a href="#">Marine Reserves</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact Us</h4>
+          <ul>
+            <li>📧 contact@marine-eco.ma</li>
+            <li>📍 Agadir, Morocco</li>
+            <li>🕐 24/7 Support</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 <strong style="color:var(--cyan)">Med Mosaic</strong> — <span>Marine Journalism · Agadir, Morocco 🌊 · All rights reserved</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCROLL TOP -->
+  <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    // Scroll top visibility
+    window.addEventListener('scroll', () => {
+      document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+    });
+
+    // Counter animation
+    function animateCounters() {
+      document.querySelectorAll('[data-target]').forEach(el => {
+        if (el.dataset.animated) return;
+        el.dataset.animated = '1';
+        const target = +el.dataset.target;
+        const suffix = el.dataset.suffix || el.textContent.replace(/[0-9]/g, '');
+        if (!el.dataset.suffix) el.dataset.suffix = suffix;
+        let current = 0;
+        const step = target / 60;
+        const timer = setInterval(() => {
+          current = Math.min(current + step, target);
+          el.textContent = Math.floor(current) + suffix;
+          if (current >= target) clearInterval(timer);
+        }, 20);
+      });
+    }
+
+    // Intersection Observer for counters
+    const statsSection = document.querySelector('.stats-section');
+    if (statsSection) {
+      new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) { animateCounters(); }
+      }, { threshold: .3 }).observe(statsSection);
+    }
+
+    // Typing animation for chat
+    setTimeout(() => {
+      const typingMsg = document.querySelector('.msg:last-child .msg-bubble');
+      if (typingMsg) {
+        const lang = window.getLang ? window.getLang() : 'en';
+        const chatReply = {
+          en: 'Coral reefs can be protected by reducing CO₂ emissions, establishing marine reserves, preventing overfishing, and monitoring water quality. Morocco launched a national initiative to protect 20% of its coastline by 2030.',
+          fr: 'Les récifs coralliens peuvent être protégés en réduisant les émissions de CO₂, en créant des réserves marines, en prévenant la surpêche et en surveillant la qualité de l’eau. Le Maroc a lancé une initiative nationale pour protéger 20 % de son littoral d’ici 2030.',
+          ar: 'يمكن حماية الشعاب المرجانية بتقليل انبعاثات CO₂، وإنشاء محميات بحرية، ومنع الصيد الجائر، ومراقبة جودة المياه. أطلق المغرب مبادرة وطنية لحماية 20٪ من ساحله بحلول 2030.'
+        };
+        typingMsg.innerHTML = chatReply[lang] || chatReply.en;
+      }
+    }, 3200);
+
+    // Newsletter
+    function handleSubscribe(btn) {
+      const input = btn.previousElementSibling;
+      if (!input.value.includes('@')) {
+        input.style.borderColor = '#e63946';
+        return;
+      }
+      const lang = window.getLang ? window.getLang() : 'en'; const labels = { en: '✓ Subscribed!', fr: '✓ Abonné !', ar: '✓ تم الاشتراك!' }; btn.textContent = labels[lang] || labels.en;
+      btn.style.background = '#2dc653';
+      input.value = '';
+    }
+
+  </script>
+  <script src="i18n.js"></script>
+</body>
+</html>

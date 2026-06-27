@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Map — Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep); color: var(--text);
+      direction: ltr; display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* NAVBAR */
+    .navbar {
+      position: relative; z-index: 1000;
+      background: rgba(2,11,24,0.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12); padding: 0 2rem; flex-shrink: 0;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; height: 68px;
+    }
+    .logo { display: flex; align-items: center; gap: .7rem; text-decoration: none; }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem; color: var(--muted); font-size: .93rem;
+      text-decoration: none; border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--cyan); background: rgba(0,201,200,0.1); }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25); color: var(--muted);
+      font-size: .8rem; font-family: inherit; padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      padding: .45rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* MAP LAYOUT */
+    .map-page { flex: 1; display: grid; grid-template-columns: 320px 1fr; overflow: hidden; }
+
+    /* SIDEBAR */
+    .map-sidebar {
+      background: rgba(6,26,48,0.97); border-right: 1px solid rgba(0,201,200,0.12);
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 20px 16px 16px; border-bottom: 1px solid rgba(0,201,200,0.1); flex-shrink: 0;
+    }
+    .sidebar-title { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px; background: rgba(0,201,200,0.1);
+      border: 1px solid rgba(0,201,200,0.2); padding: 5px 10px; border-radius: 20px;
+      font-size: 11px; color: var(--cyan); margin-bottom: 14px;
+    }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #2dc653; animation: pulse-g 2s infinite; }
+    @keyframes pulse-g { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    /* FILTERS */
+    .filter-group { padding: 14px 16px; border-bottom: 1px solid rgba(0,201,200,0.08); }
+    .filter-label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-btn {
+      padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05); color: var(--muted); font-family: inherit;
+    }
+    .filter-btn:hover, .filter-btn.active { background: rgba(0,201,200,0.15); border-color: rgba(0,201,200,0.4); color: var(--cyan); }
+    .filter-btn.poll.active  { background: rgba(231,57,70,0.2);  border-color: rgba(231,57,70,0.5);  color: #f1727d; }
+    .filter-btn.prot.active  { background: rgba(45,198,83,0.15); border-color: rgba(45,198,83,0.4);  color: #2dc653; }
+    .filter-btn.res.active   { background: rgba(0,201,200,0.15); border-color: rgba(0,201,200,0.4);  color: var(--cyan); }
+
+    /* INCIDENTS LIST */
+    .incidents-list { flex: 1; overflow-y: auto; padding: 10px 0; }
+    .incident-item {
+      padding: 14px 16px; border-bottom: 1px solid rgba(0,201,200,0.06);
+      cursor: pointer; transition: background .2s;
+    }
+    .incident-item:hover { background: rgba(0,201,200,0.06); }
+    .incident-item.active { background: rgba(0,201,200,0.1); border-left: 3px solid var(--cyan); }
+    .incident-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+    .incident-title { font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.4; }
+    .incident-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .badge-poll  { background: rgba(231,57,70,0.2);  color: #f1727d; }
+    .badge-prot  { background: rgba(45,198,83,0.15); color: #2dc653; }
+    .badge-res   { background: rgba(0,201,200,0.15); color: var(--cyan); }
+    .incident-meta { font-size: 11px; color: var(--muted); display: flex; gap: 8px; }
+    .severity-high   { color: #f1727d; }
+    .severity-medium { color: #ffc107; }
+    .severity-low    { color: #2dc653; }
+    .severity-good   { color: #2dc653; }
+    .severity-info   { color: var(--cyan); }
+
+    /* MAP CONTAINER */
+    .map-container { position: relative; flex: 1; }
+    #map { width: 100%; height: 100%; z-index: 1; }
+
+    /* MAP OVERLAY INFO */
+    .map-info-overlay {
+      position: absolute; top: 16px; right: 16px; z-index: 500;
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.2);
+      border-radius: var(--r); padding: 16px; min-width: 200px;
+      backdrop-filter: blur(8px); box-shadow: var(--glow);
+    }
+    .map-info-title { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 12px; color: var(--muted); }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .l-poll { background: #e73946; }
+    .l-prot { background: #2dc653; }
+    .l-res  { background: #00c9c8; }
+
+    /* STATS BAR */
+    .map-stats {
+      position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 500;
+      display: flex; gap: 12px;
+    }
+    .map-stat-pill {
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.2);
+      border-radius: 20px; padding: 7px 16px; font-size: 12px; color: var(--muted);
+      backdrop-filter: blur(8px); display: flex; align-items: center; gap: 6px;
+    }
+    .map-stat-pill strong { color: var(--white); }
+
+    /* POPUP OVERRIDE */
+    .leaflet-popup-content-wrapper {
+      background: rgba(6,26,48,0.97) !important;
+      border: 1px solid rgba(0,201,200,0.25) !important;
+      color: var(--text) !important; border-radius: 12px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+    }
+    .leaflet-popup-tip { background: rgba(6,26,48,0.97) !important; }
+    .popup-type { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .popup-title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 6px; line-height: 1.4; }
+    .popup-desc  { font-size: 12px; color: var(--muted); line-height: 1.55; margin-bottom: 10px; }
+    .popup-meta  { font-size: 11px; color: rgba(0,201,200,0.6); }
+
+    @media(max-width:768px) {
+      .map-page { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .map-sidebar { max-height: 45vh; border-right: none; border-bottom: 1px solid rgba(0,201,200,0.12); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-text">
+        <span class="logo-name">MED MOSAIC</span>
+        <span class="logo-sub">Marine Journalism</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="map.html" class="active">Map</a></li>
+      <li><a href="chatbot.html">AI Assistant</a></li>
+      <li><a href="comments.html">Comments</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="lb-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="lb-fr" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn" id="lb-ar" onclick="setLang('ar')">ع</button>
+      </div>
+      <a href="login.html" class="btn-login">Login</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAP PAGE -->
+<div class="map-page">
+
+  <!-- SIDEBAR -->
+  <aside class="map-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Marine Monitoring</div>
+      <div class="live-badge"><div class="live-dot"></div> Live Update</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Interactive Marine Pollution Map covering Moroccan territorial waters and Mediterranean coast.</div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-group">
+      <div class="filter-label">Filter by type</div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all" onclick="filterIncidents('all',this)">All</button>
+        <button class="filter-btn poll" data-filter="pollution" onclick="filterIncidents('pollution',this)">🚨 Pollution</button>
+        <button class="filter-btn prot" data-filter="protection" onclick="filterIncidents('protection',this)">🌿 Protected</button>
+        <button class="filter-btn res"  data-filter="research"  onclick="filterIncidents('research',this)">🔬 Research</button>
+      </div>
+    </div>
+
+    <!-- INCIDENTS LIST -->
+    <div class="incidents-list" id="incidentsList"></div>
+  </aside>
+
+  <!-- MAP -->
+  <div class="map-container">
+    <div id="map"></div>
+
+    <!-- LEGEND -->
+    <div class="map-info-overlay">
+      <div class="map-info-title">Legend</div>
+      <div class="legend-item"><div class="legend-dot l-poll"></div> Pollution Zone</div>
+      <div class="legend-item"><div class="legend-dot l-prot"></div> Protected Area</div>
+      <div class="legend-item"><div class="legend-dot l-res"></div>  Research Station</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="map-stats">
+      <div class="map-stat-pill">🚨 <strong id="pollCount">0</strong> Pollution zones</div>
+      <div class="map-stat-pill">🌿 <strong id="protCount">0</strong> Protected areas</div>
+      <div class="map-stat-pill">🔬 <strong id="resCount">0</strong> Research stations</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const INCIDENTS = [
+  { id:1, title:"Oil Spill — Strait of Gibraltar",  desc:"Emergency response deployed to contain hydrocarbon spill near the strait. High ecological risk to migratory species.",            type:"pollution",  severity:"high",   lat:35.98, lng:-5.55 },
+  { id:2, title:"Plastic Accumulation Zone — Agadir Bay", desc:"Significant concentration of micro-plastics detected in the bay. Monitoring in progress by national team.",                type:"pollution",  severity:"medium", lat:30.41, lng:-9.62 },
+  { id:3, title:"Al Hoceima Marine National Park",   desc:"Fully protected zone — fishing and development restricted. Excellent biodiversity including monk seals and cetaceans.",        type:"protection", severity:"good",   lat:35.25, lng:-3.93 },
+  { id:4, title:"Souss-Massa Biosphere Reserve",    desc:"UNESCO biosphere reserve covering coastal wetlands critical for migratory birds and marine mammals.",                          type:"protection", severity:"good",   lat:30.01, lng:-9.72 },
+  { id:5, title:"INRH Research Station — Casablanca",desc:"National Institute of Fisheries Research oceanographic station. Continuous water quality and fish stock monitoring.",           type:"research",   severity:"info",   lat:33.59, lng:-7.61 },
+  { id:6, title:"Sewage Discharge — Kenitra Coast",  desc:"Industrial wastewater detected near estuary. Risk to Sebou river delta ecosystem.",                                           type:"pollution",  severity:"high",   lat:34.26, lng:-6.58 },
+  { id:7, title:"Dakhla Bay Protected Zone",         desc:"Exceptional ecosystems — lagoon rich in flamingos, sharks, dolphins and windsurfing eco-tourism.",                             type:"protection", severity:"good",   lat:23.71, lng:-15.93 },
+  { id:8, title:"ONDA Coastal Monitoring — Agadir",  desc:"Air & sea quality monitoring system near Agadir Al Massira Airport. Operational since 2024.",                                 type:"research",   severity:"info",   lat:30.32, lng:-9.41 },
+  { id:9, title:"Microplastic Alert — Mediterranean Shelf", desc:"Elevated microplastic concentrations mapped along the northern shelf. Data submitted to UNEP.",                       type:"pollution",  severity:"medium", lat:35.60, lng:-2.21 },
+  { id:10,title:"Cap Spartel Research Buoy",         desc:"Real-time oceanographic buoy monitoring Atlantic-Mediterranean water exchange at the strait entrance.",                       type:"research",   severity:"info",   lat:35.79, lng:-5.92 },
+];
+
+const COLORS = { pollution:"#e73946", protection:"#2dc653", research:"#00c9c8" };
+
+let map, markers = {}, currentFilter = "all";
+
+// Init map
+map = L.map('map', {
+  center: [31.5, -7], zoom: 5,
+  zoomControl: true,
+});
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap contributors © CARTO',
+  subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+function createIcon(type) {
+  const color = COLORS[type];
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:18px;height:18px;border-radius:50%;
+      background:${color};border:2.5px solid #fff;
+      box-shadow:0 0 10px ${color}88;
+    "></div>`,
+    iconSize:[18,18], iconAnchor:[9,9], popupAnchor:[0,-12]
+  });
+}
+
+function buildList() {
+  const list = document.getElementById('incidentsList');
+  const items = currentFilter === 'all' ? INCIDENTS : INCIDENTS.filter(i => i.type === currentFilter);
+  document.getElementById('pollCount').textContent = INCIDENTS.filter(i=>i.type==='pollution').length;
+  document.getElementById('protCount').textContent = INCIDENTS.filter(i=>i.type==='protection').length;
+  document.getElementById('resCount').textContent  = INCIDENTS.filter(i=>i.type==='research').length;
+
+  list.innerHTML = items.map(inc => `
+    <div class="incident-item" id="item-${inc.id}" onclick="focusIncident(${inc.id})">
+      <div class="incident-header">
+        <div class="incident-title">${inc.title}</div>
+        <span class="incident-badge ${inc.type === 'pollution' ? 'badge-poll' : inc.type === 'protection' ? 'badge-prot' : 'badge-res'}">
+          ${inc.type === 'pollution' ? '🚨' : inc.type === 'protection' ? '🌿' : '🔬'}
+        </span>
+      </div>
+      <div class="incident-meta">
+        <span class="severity-${inc.severity}">● ${inc.severity.toUpperCase()}</span>
+        <span>${inc.lat.toFixed(2)}°N, ${Math.abs(inc.lng).toFixed(2)}°W</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addMarkers() {
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+  INCIDENTS.forEach(inc => {
+    if (currentFilter !== 'all' && inc.type !== currentFilter) return;
+    const m = L.marker([inc.lat, inc.lng], { icon: createIcon(inc.type) }).addTo(map);
+    const typeLabel = inc.type.charAt(0).toUpperCase() + inc.type.slice(1);
+    const typeColor = COLORS[inc.type];
+    m.bindPopup(`
+      <div style="min-width:220px">
+        <div class="popup-type" style="color:${typeColor}">${typeLabel}</div>
+        <div class="popup-title">${inc.title}</div>
+        <div class="popup-desc">${inc.desc}</div>
+        <div class="popup-meta">📍 ${inc.lat.toFixed(4)}°N, ${Math.abs(inc.lng).toFixed(4)}°W</div>
+      </div>
+    `, { maxWidth: 280 });
+    markers[inc.id] = m;
+  });
+}
+
+function focusIncident(id) {
+  document.querySelectorAll('.incident-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('item-'+id)?.classList.add('active');
+  const inc = INCIDENTS.find(i => i.id === id);
+  if (!inc) return;
+  map.flyTo([inc.lat, inc.lng], 8, { duration: 1.2 });
+  setTimeout(() => markers[id]?.openPopup(), 1400);
+}
+
+function filterIncidents(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  addMarkers();
+  buildList();
+}
+
+buildList();
+addMarkers();
+</script>
+<script src="i18n.js"></script>
+</body>
+</html>

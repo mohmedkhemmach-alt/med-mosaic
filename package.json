@@ -1,0 +1,20 @@
+{
+  "name": "env-site",
+  "version": "1.0.0",
+  "description": "``` marine-eco-news/ │ ├── frontend/                   ← واجهة الموقع العامة │   ├── index.html             ← الصفحة الرئيسية │   ├── news.html              ← قائمة الأخبار البحرية │   ├── article.html           ← صفحة قراءة المقال │   ├── map.html               ← خريطة Leaflet التفاعلية │   ├── chatbot.html           ← مساعد الذكاء الاصطناعي │   ├── comments.html          ← التعليقات والنقاشات │   ├── login.html             ← تسجيل الدخول / التسجيل │   ├── app.js                 ← منطق المشاركة (بيانات، ترجمة) │   └── style.css              ← التصميم العام RTL/LTR │ ├── admin/                      ← لوحة الإدارة │   ├── dashboard.html         ← إحصائيات وملخص النشاط │   ├── articles.html          ← إدارة المقالات (CRUD + AI) │   ├── comments.html          ← إدارة التعليقات ومراجعتها │   ├── breaking.html          ← الأخبار العاجلة │   ├── users.html             ← إدارة المستخدمين والأدوار │   ├── permissions.html       ← مصفوفة الصلاحيات │   ├── settings.html          ← إعدادات الموقع │   └── ai.html                ← مركز خدمات الذكاء الاصطناعي │ ├── schema.sql                  ← قاعدة البيانات MySQL/PostgreSQL ├── server.js                   ← Backend API Node.js/Express └── README.md                   ← هذا الملف ```",
+  "main": "ai.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

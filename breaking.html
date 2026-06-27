@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breaking News — Admin · Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" />
+  <style>
+    :root{--deep:#020b18;--navy:#061a30;--teal:#0d7d8c;--cyan:#00c9c8;--white:#ffffff;--text:#cce8f0;--muted:#7fb3c8;--card-bg:rgba(6,26,48,0.85);--glow:0 0 24px rgba(0,201,200,0.25);--r:12px;--sidebar:240px;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Cairo',sans-serif;background:var(--deep);color:var(--text);display:flex;min-height:100vh;}
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:var(--navy);}::-webkit-scrollbar-thumb{background:var(--teal);border-radius:3px;}
+    .sidebar{width:var(--sidebar);flex-shrink:0;background:rgba(2,11,24,0.98);border-right:1px solid rgba(0,201,200,0.1);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto;}
+    .sidebar-brand{padding:20px 16px;border-bottom:1px solid rgba(0,201,200,0.1);}
+    .brand-name{font-size:16px;font-weight:800;color:var(--white);}
+    .brand-sub{font-size:10px;font-weight:600;color:var(--cyan);letter-spacing:1.5px;text-transform:uppercase;}
+    .nav-section{padding:16px 10px 8px;}
+    .nav-section-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;padding:0 6px;margin-bottom:6px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;transition:all .2s;margin-bottom:2px;}
+    .nav-item:hover{background:rgba(0,201,200,0.08);color:var(--text);}
+    .nav-item.active{background:rgba(0,201,200,0.12);color:var(--cyan);}
+    .nav-badge{margin-left:auto;background:#e73946;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;}
+    .sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(0,201,200,0.1);}
+    .logout-btn{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;text-decoration:none;padding:8px 10px;border-radius:8px;transition:all .2s;}
+    .logout-btn:hover{color:#e73946;background:rgba(231,57,70,0.08);}
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;}
+    .topbar{background:rgba(6,26,48,0.97);border-bottom:1px solid rgba(0,201,200,0.1);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+    .topbar-title{font-size:15px;font-weight:700;color:var(--white);}
+    .content{padding:28px 24px;flex:1;}
+    .card{background:var(--card-bg);border:1px solid rgba(0,201,200,0.1);border-radius:var(--r);margin-bottom:20px;}
+    .card-header{padding:16px 20px;border-bottom:1px solid rgba(0,201,200,0.08);display:flex;align-items:center;justify-content:space-between;}
+    .card-title{font-size:14px;font-weight:700;color:var(--white);}
+    .card-body{padding:20px;}
+    .form-label{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;letter-spacing:.3px;}
+    .form-input,.form-textarea{width:100%;background:rgba(0,201,200,0.04);border:1.5px solid rgba(0,201,200,0.15);color:var(--white);padding:10px 14px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;margin-bottom:16px;}
+    .form-input:focus,.form-textarea:focus{border-color:var(--cyan);}
+    .form-textarea{resize:vertical;min-height:80px;}
+    .btn-save{background:linear-gradient(135deg,var(--teal),var(--cyan));color:var(--deep);font-weight:700;font-size:13px;font-family:inherit;padding:9px 22px;border:none;border-radius:8px;cursor:pointer;transition:opacity .2s;}
+    .btn-save:hover{opacity:.85;}
+    .preview-bar{background:linear-gradient(90deg,rgba(231,57,70,0.9),rgba(200,40,50,0.7));border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+    .preview-label{background:rgba(0,0,0,0.3);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;white-space:nowrap;}
+    .preview-text{font-size:13px;color:#fff;flex:1;}
+    .breaking-list{display:flex;flex-direction:column;gap:10px;}
+    .breaking-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+    .breaking-item.active-item{border-color:rgba(0,201,200,0.3);background:rgba(0,201,200,0.06);}
+    .b-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .b-dot.on{background:#2dc653;}
+    .b-dot.off{background:var(--muted);}
+    .b-text{flex:1;font-size:13px;color:var(--text);}
+    .b-meta{font-size:11px;color:var(--muted);}
+    .b-actions{display:flex;gap:6px;}
+    .b-btn{background:none;border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-size:11px;font-family:inherit;padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .2s;}
+    .b-btn:hover{border-color:rgba(0,201,200,0.4);color:var(--cyan);}
+    .b-btn.del:hover{border-color:rgba(231,57,70,0.4);color:#f1727d;}
+    .ai-gen{background:rgba(0,201,200,0.06);border:1px solid rgba(0,201,200,0.15);border-radius:8px;padding:16px;}
+    .ai-gen-title{font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+    .ai-gen-btn{background:rgba(0,201,200,0.1);border:1px solid rgba(0,201,200,0.25);color:var(--cyan);font-size:12px;font-family:inherit;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:600;transition:all .2s;}
+    .ai-gen-btn:hover{background:rgba(0,201,200,0.2);}
+    .ai-result{margin-top:12px;font-size:13px;color:var(--text);line-height:1.6;display:none;}
+    .ai-result.visible{display:block;}
+    .char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:-12px;margin-bottom:12px;}
+  </style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand"><div class="brand-name">MED MOSAIC</div><div class="brand-sub">Admin Panel</div></div>
+  <div class="nav-section">
+    <div class="nav-section-label">Overview</div>
+    <a href="dashboard.html" class="nav-item"><span>📊</span> Dashboard</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Content</div>
+    <a href="articles.html" class="nav-item"><span>📰</span> Articles</a>
+    <a href="comments.html" class="nav-item"><span>💬</span> Comments <span class="nav-badge">3</span></a>
+    <a href="breaking.html" class="nav-item active"><span>⚡</span> Breaking News</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">People</div>
+    <a href="users.html" class="nav-item"><span>👥</span> Users</a>
+    <a href="permissions.html" class="nav-item"><span>🔐</span> Permissions</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">System</div>
+    <a href="ai.html" class="nav-item"><span>🤖</span> AI Services</a>
+    <a href="settings.html" class="nav-item"><span>⚙️</span> Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <a href="../index.html" class="logout-btn">↗ View Site</a>
+    <a href="../login.html" class="logout-btn">⇠ Sign Out</a>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">⚡ Breaking News Manager</div>
+  </div>
+  <div class="content">
+
+    <!-- PREVIEW -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">🔴 Live Preview — Ticker Bar</div></div>
+      <div class="card-body">
+        <div class="preview-bar">
+          <span class="preview-label">⚡ BREAKING</span>
+          <span class="preview-text" id="previewText">🔴 Ocean temperatures rise 2.1°C over the past decade — scientists warn of accelerating coral bleaching risk</span>
+        </div>
+        <p style="font-size:12px;color:var(--muted)">This is how the breaking news ticker will appear to site visitors.</p>
+      </div>
+    </div>
+
+    <!-- COMPOSE -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">✍️ Compose Breaking News</div></div>
+      <div class="card-body">
+        <label class="form-label">Breaking News Text</label>
+        <textarea class="form-textarea" id="breakingText" maxlength="200" oninput="updatePreview(this.value);updateCount(this.value)">🔴 Ocean temperatures rise 2.1°C over the past decade — scientists warn of accelerating coral bleaching risk</textarea>
+        <div class="char-count"><span id="charCount">107</span> / 200 characters</div>
+
+        <div class="ai-gen">
+          <div class="ai-gen-title">🤖 AI Suggestion</div>
+          <button class="ai-gen-btn" onclick="generateAI()">Generate Breaking News with AI</button>
+          <div class="ai-result" id="aiResult"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn-save" onclick="publishBreaking()">⚡ Publish Now</button>
+          <button onclick="scheduleBreaking()" style="background:rgba(0,201,200,0.08);border:1px solid rgba(0,201,200,0.2);color:var(--cyan);font-size:13px;font-family:inherit;padding:9px 18px;border-radius:8px;cursor:pointer;font-weight:600;">🕐 Schedule</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">📋 Breaking News History</div></div>
+      <div class="card-body">
+        <div class="breaking-list" id="breakingList"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const breakings=[
+  {id:1,text:"🔴 Ocean temperatures rise 2.1°C over the past decade — scientists warn of accelerating coral bleaching risk",date:"Today 09:30",active:true},
+  {id:2,text:"🟠 Morocco expands marine protected areas to 10% of territorial waters ahead of COP30",date:"Yesterday 14:00",active:false},
+  {id:3,text:"🔴 Oil spill detected near Strait of Gibraltar — emergency teams mobilized",date:"Jan 14, 08:15",active:false},
+  {id:4,text:"🟢 Agadir beaches receive Blue Flag certification for third consecutive year",date:"Jan 10, 11:00",active:false},
+];
+
+const AI_SUGGESTIONS=[
+  "🔴 Scientists discover 12 new species in deep Indian Ocean trenches — biodiversity milestone",
+  "🟠 Mediterranean plastic levels 2x projected — UNEP calls for emergency summit",
+  "🔴 Coral reef bleaching accelerates along Morocco's Mediterranean coast following marine heatwave",
+  "🟢 Dolphin population rebounds in Agadir Bay — first sighting in 8 years confirmed by INRH",
+];
+
+function renderBreakings(){
+  document.getElementById('breakingList').innerHTML=breakings.map(b=>`
+    <div class="breaking-item ${b.active?'active-item':''}" id="bi-${b.id}">
+      <div class="b-dot ${b.active?'on':'off'}"></div>
+      <div style="flex:1">
+        <div class="b-text">${b.text}</div>
+        <div class="b-meta">${b.date} · ${b.active?'<span style="color:#2dc653">Active</span>':'Inactive'}</div>
+      </div>
+      <div class="b-actions">
+        ${!b.active?`<button class="b-btn" onclick="setActive(${b.id})">▶ Activate</button>`:''}
+        <button class="b-btn del" onclick="deleteBreaking(${b.id})">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updatePreview(v){document.getElementById('previewText').textContent=v||'(empty)';}
+function updateCount(v){document.getElementById('charCount').textContent=v.length;}
+
+function publishBreaking(){
+  const text=document.getElementById('breakingText').value.trim();
+  if(!text)return;
+  breakings.forEach(b=>b.active=false);
+  breakings.unshift({id:Date.now(),text,date:'Just now',active:true});
+  renderBreakings();
+  alert('Breaking news published successfully!');
+}
+
+function setActive(id){
+  breakings.forEach(b=>b.active=false);
+  const b=breakings.find(x=>x.id===id);
+  if(b){b.active=true;document.getElementById('breakingText').value=b.text;updatePreview(b.text);updateCount(b.text);}
+  renderBreakings();
+}
+
+function deleteBreaking(id){
+  if(!confirm('Delete this breaking news?'))return;
+  const idx=breakings.findIndex(x=>x.id===id);
+  if(idx>-1)breakings.splice(idx,1);
+  renderBreakings();
+}
+
+function scheduleBreaking(){alert('Scheduling feature — connect to the backend API to set a timed publish.');}
+
+let aiIdx=0;
+function generateAI(){
+  const result=document.getElementById('aiResult');
+  result.textContent='⏳ Generating...';
+  result.classList.add('visible');
+  setTimeout(()=>{
+    const suggestion=AI_SUGGESTIONS[aiIdx%AI_SUGGESTIONS.length];
+    aiIdx++;
+    result.innerHTML=`<div style="margin-bottom:10px">${suggestion}</div><button onclick="useAI('${suggestion.replace(/'/g,"\\'")}','${suggestion.replace(/'/g,"\\'")}') " style="background:rgba(0,201,200,0.12);border:1px solid rgba(0,201,200,0.25);color:var(--cyan);font-size:12px;font-family:inherit;padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:600;">Use this text ↓</button>`;
+  },1200);
+}
+
+function useAI(text){
+  document.getElementById('breakingText').value=text;
+  updatePreview(text);updateCount(text);
+  document.getElementById('aiResult').classList.remove('visible');
+}
+
+renderBreakings();
+</script>
+</body>
+</html>
