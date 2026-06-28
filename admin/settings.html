@@ -59,7 +59,20 @@
     .save-toast{position:fixed;bottom:24px;right:24px;background:rgba(45,198,83,0.15);border:1px solid rgba(45,198,83,0.4);color:#2dc653;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
     .save-toast.show{opacity:1;}
   </style>
-<script>(function(){var t=localStorage.getItem('adminToken');if(!t){window.location.href='../login.html';}window.adminToken=t;})();</script>
+<script>
+// Auto-add token to all admin nav links
+window.addEventListener("DOMContentLoaded",function(){
+  var token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  window.adminToken=token;
+  document.querySelectorAll(".nav-item").forEach(function(a){
+    var href=a.getAttribute("href");
+    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
+      a.setAttribute("href",href+"?token="+token);
+    }
+  });
+});
+</script>
 </head>
 <body>
 <aside class="sidebar">

@@ -171,7 +171,20 @@
 
     @media(max-width:600px) { .comments-controls { flex-direction: column; align-items: flex-start; } }
   </style>
-<script>(function(){var t=localStorage.getItem('adminToken');if(!t){window.location.href='../login.html';}window.adminToken=t;})();</script>
+<script>
+// Auto-add token to all admin nav links
+window.addEventListener("DOMContentLoaded",function(){
+  var token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  window.adminToken=token;
+  document.querySelectorAll(".nav-item").forEach(function(a){
+    var href=a.getAttribute("href");
+    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
+      a.setAttribute("href",href+"?token="+token);
+    }
+  });
+});
+</script>
 </head>
 <body>
 

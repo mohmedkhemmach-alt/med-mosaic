@@ -82,7 +82,20 @@
     .btn-cancel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-weight:600;font-size:13px;font-family:inherit;padding:8px 18px;border-radius:8px;cursor:pointer;}
     .btn-cancel:hover{color:var(--white);}
   </style>
-<script>(function(){var t=localStorage.getItem('adminToken');if(!t){window.location.href='../login.html';}window.adminToken=t;})();</script>
+<script>
+// Auto-add token to all admin nav links
+window.addEventListener("DOMContentLoaded",function(){
+  var token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  window.adminToken=token;
+  document.querySelectorAll(".nav-item").forEach(function(a){
+    var href=a.getAttribute("href");
+    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
+      a.setAttribute("href",href+"?token="+token);
+    }
+  });
+});
+</script>
 </head>
 <body>
 <aside class="sidebar">

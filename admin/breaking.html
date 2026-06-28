@@ -60,7 +60,20 @@
     .ai-result.visible{display:block;}
     .char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:-12px;margin-bottom:12px;}
   </style>
-<script>(function(){var t=localStorage.getItem('adminToken');if(!t){window.location.href='../login.html';}window.adminToken=t;})();</script>
+<script>
+// Auto-add token to all admin nav links
+window.addEventListener("DOMContentLoaded",function(){
+  var token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  window.adminToken=token;
+  document.querySelectorAll(".nav-item").forEach(function(a){
+    var href=a.getAttribute("href");
+    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
+      a.setAttribute("href",href+"?token="+token);
+    }
+  });
+});
+</script>
 </head>
 <body>
 <aside class="sidebar">
