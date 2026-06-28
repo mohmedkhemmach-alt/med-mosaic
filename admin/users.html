@@ -61,19 +61,7 @@
     .action-btn.del:hover{border-color:rgba(231,57,70,0.4);color:#f1727d;}
     .role-select{background:rgba(0,201,200,0.06);border:1px solid rgba(0,201,200,0.15);color:var(--text);padding:4px 8px;border-radius:6px;font-family:inherit;font-size:11px;outline:none;cursor:pointer;}
   </style>
-<script>
-(async function(){
-  const token=localStorage.getItem("adminToken");
-  if(!token){window.location.href="../login.html";return;}
-  try{
-    const res=await fetch("/api/auth/me",{headers:{"Authorization":"Bearer "+token}});
-    if(!res.ok){localStorage.removeItem("adminToken");window.location.href="../login.html";return;}
-    const user=await res.json();
-    if(user.role!=="admin"){window.location.href="../login.html";return;}
-    window.currentAdmin=user;window.adminToken=token;
-  }catch(e){window.location.href="../login.html";}
-})();
-</script>
+<script>(function(){var t=localStorage.getItem('adminToken');if(!t){window.location.href='../login.html';}window.adminToken=t;})();</script>
 </head>
 <body>
 <aside class="sidebar">
