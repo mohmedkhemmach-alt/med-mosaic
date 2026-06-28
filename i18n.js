@@ -173,6 +173,37 @@
     "Research Stations": { fr: "Stations de recherche", ar: "محطات البحث" },
     "Latest Incidents": { fr: "Derniers incidents", ar: "آخر الحوادث" },
 
+    /* ---- Comments page ---- */
+    "Community": { fr: "Communauté", ar: "مجتمع" },
+    "Community Comments": { fr: "Commentaires de la communauté", ar: "تعليقات المجتمع" },
+    "Join the discussion on marine environment topics and share your thoughts with the community.":
+      { fr: "Rejoignez la discussion sur les sujets liés à l'environnement marin et partagez vos réflexions avec la communauté.",
+        ar: "انضم إلى النقاش حول موضوعات البيئة البحرية وشارك أفكارك مع المجتمع." },
+    "Leave a Comment": { fr: "Laisser un commentaire", ar: "اترك تعليقاً" },
+    "Share your thoughts on marine ecology, conservation efforts, or ocean news...":
+      { fr: "Partagez vos réflexions sur l'écologie marine, les efforts de conservation ou les actualités des océans...",
+        ar: "شارك أفكارك حول البيئة البحرية أو جهود الحفاظ عليها أو أخبار المحيطات..." },
+    "Your comment will be reviewed before publishing.":
+      { fr: "Votre commentaire sera examiné avant publication.",
+        ar: "سيتم مراجعة تعليقك قبل نشره." },
+    "Post Comment": { fr: "Publier", ar: "أضف تعليقاً" },
+    "Showing": { fr: "Affichage de", ar: "عرض" },
+    "approved comments": { fr: "commentaires approuvés", ar: "تعليقات معتمدة" },
+    "Newest First": { fr: "Les plus récents", ar: "الأحدث أولاً" },
+    "Most Liked": { fr: "Les plus aimés", ar: "الأكثر إعجاباً" },
+    "Oldest First": { fr: "Les plus anciens", ar: "الأقدم أولاً" },
+    "Load More Comments": { fr: "Charger plus de commentaires", ar: "تحميل المزيد من التعليقات" },
+    "Loading...": { fr: "Chargement...", ar: "جارٍ التحميل..." },
+    "No more comments": { fr: "Plus de commentaires", ar: "لا توجد تعليقات أخرى" },
+    "Reply": { fr: "Répondre", ar: "ردّ" },
+    "↩ Reply": { fr: "↩ Répondre", ar: "↩ ردّ" },
+    "✓ Submitted for Review": { fr: "✓ Soumis pour examen", ar: "✓ تم الإرسال للمراجعة" },
+    "Conservation": { fr: "Conservation", ar: "الحفظ" },
+    "Community": { fr: "Communauté", ar: "مجتمع" },
+    "Education": { fr: "Éducation", ar: "التعليم" },
+    "Science": { fr: "Science", ar: "العلوم" },
+    "Local": { fr: "Local", ar: "محلي" },
+
     /* ---- Chatbot page ---- */
     "Online & Ready": { fr: "En ligne et prêt", ar: "متصل وجاهز" },
     "Suggested Questions": { fr: "Questions suggérées", ar: "أسئلة مقترحة" },
