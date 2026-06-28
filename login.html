@@ -307,29 +307,56 @@
       document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
     }
 
-    function handleLogin() {
-      const email = document.getElementById('login-email').value;
+    async function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
       const pwd = document.getElementById('login-pwd').value;
       const err = document.getElementById('login-error');
       const dict = I18N[currentLang];
       if (!email || !pwd) { err.textContent = dict.errFields; err.style.display = 'block'; return; }
-      // Demo: redirect to admin if admin email
-      if (email === 'admin@marine-eco.ma') { location.href = '../admin/dashboard.html'; return; }
       err.style.display = 'none';
-      location.href = 'index.html';
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pwd })
+        });
+        const data = await res.json();
+        if (!res.ok) { err.textContent = data.error || dict.errFields; err.style.display = 'block'; return; }
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        if (data.user.role === 'admin') {
+          location.href = 'admin/dashboard.html';
+        } else {
+          location.href = 'index.html';
+        }
+      } catch(e) {
+        err.textContent = 'خطأ في الاتصال بالسيرفر'; err.style.display = 'block';
+      }
     }
 
-    function handleRegister() {
-      const name = document.getElementById('reg-name').value;
-      const email = document.getElementById('reg-email').value;
+    async function handleRegister() {
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
       const pwd = document.getElementById('reg-pwd').value;
       const suc = document.getElementById('reg-success');
       const dict = I18N[currentLang];
       if (!name || !email || !pwd) return;
       if (pwd.length < 8) { alert(dict.errPwdLen); return; }
-      suc.textContent = dict.successReg;
-      suc.style.display = 'block';
-      setTimeout(() => location.href = 'index.html', 1800);
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password: pwd })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error || 'خطأ في التسجيل'); return; }
+        localStorage.setItem('adminToken', data.token);
+        suc.textContent = dict.successReg;
+        suc.style.display = 'block';
+        setTimeout(() => location.href = 'index.html', 1800);
+      } catch(e) {
+        alert('خطأ في الاتصال بالسيرفر');
+      }
     }
 
     function forgotPwd() { alert(I18N[currentLang].forgotAlert); }
