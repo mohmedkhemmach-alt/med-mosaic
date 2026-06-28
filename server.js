@@ -28,7 +28,7 @@ const pool = mysql.createPool({
   port:     process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 5,
-  charset: 'utf8mb4'
+  charset:   'UTF8MB4_UNICODE_CI'
 });
 
 // ===== INIT DATABASE TABLES =====
