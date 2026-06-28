@@ -613,38 +613,56 @@
       { name: "Fatima Benali",     avatar: "👩", text: "Very interesting information. Are there more details available on this topic?", date: "1 day ago" }
     ];
 
-    function renderComments() {
-      document.getElementById('comments-preview').innerHTML = articleComments.map(c => `
+    function renderComments(comments) {
+      const list = comments || articleComments;
+      document.getElementById('comments-preview').innerHTML = list.map(c => `
         <div class="mini-comment">
           <div class="mini-comment-header">
-            <div class="mini-avatar">${c.avatar}</div>
-            <div><h5>${c.name}</h5><span class="mini-date">${c.date}</span></div>
+            <div class="mini-avatar">${c.avatar || '👤'}</div>
+            <div><h5>${c.name || c.user_name}</h5><span class="mini-date">${c.date || new Date(c.created_at).toLocaleDateString()}</span></div>
           </div>
           <p>${c.text}</p>
         </div>
       `).join('');
     }
 
+    async function loadCommentsFromDB() {
+      try {
+        const res = await fetch('/api/comments');
+        const dbComments = await res.json();
+        if (dbComments && dbComments.length > 0) {
+          renderComments(dbComments);
+        } else {
+          renderComments(articleComments);
+        }
+      } catch(e) {
+        renderComments(articleComments);
+      }
+    }
+
     async function submitComment() {
       const name = document.getElementById('c-name').value.trim();
       const text = document.getElementById('c-text').value.trim();
       if (!name || !text) { alert('Please enter your name and comment.'); return; }
-
-      // أضف التعليق محلياً فوراً
+      
+      // أضف محلياً فوراً
       articleComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
       document.getElementById('c-name').value = '';
       document.getElementById('c-text').value = '';
-      renderComments();
+      renderComments(articleComments);
 
-      // احفظه في قاعدة البيانات
+      // احفظ في DB
       try {
         await fetch('/api/comments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, userName: name, articleId: 1, userId: 2 })
+          body: JSON.stringify({ text, userName: name, articleId: 1 })
         });
       } catch(e) { console.error('DB save error:', e); }
     }
+
+    // حمّل التعليقات من DB عند فتح الصفحة
+    loadCommentsFromDB();
 
     function shareArticle(platform) {
       const url = window.location.href;
