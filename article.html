@@ -625,14 +625,25 @@
       `).join('');
     }
 
-    function submitComment() {
+    async function submitComment() {
       const name = document.getElementById('c-name').value.trim();
       const text = document.getElementById('c-text').value.trim();
       if (!name || !text) { alert('Please enter your name and comment.'); return; }
+
+      // أضف التعليق محلياً فوراً
       articleComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
       document.getElementById('c-name').value = '';
       document.getElementById('c-text').value = '';
       renderComments();
+
+      // احفظه في قاعدة البيانات
+      try {
+        await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, userName: name, articleId: 1, userId: 2 })
+        });
+      } catch(e) { console.error('DB save error:', e); }
     }
 
     function shareArticle(platform) {
