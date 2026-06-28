@@ -17,6 +17,19 @@ const JWT_SECRET = "marine-eco-secret-2025";
 
 app.use(cors());
 app.use(express.json());
+// ===== ADMIN FOLDER PROTECTION =====
+app.use('/admin', (req, res, next) => {
+  const token = req.query.token || req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.redirect('/login.html');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') return res.redirect('/login.html');
+    next();
+  } catch(e) {
+    return res.redirect('/login.html');
+  }
+});
+
 app.use(express.static(__dirname));
 
 // ===== MySQL CONNECTION =====

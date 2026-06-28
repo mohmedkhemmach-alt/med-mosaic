@@ -157,6 +157,9 @@
 <script>
   // ===== ADMIN AUTH CHECK =====
   (async function() {
+    // خذ التوكن من URL أو من localStorage
+    const urlToken = new URLSearchParams(window.location.search).get('token');
+    if (urlToken) localStorage.setItem('adminToken', urlToken);
     const token = localStorage.getItem('adminToken');
     if (!token) { window.location.href = '../login.html'; return; }
     try {
@@ -166,7 +169,6 @@
       if (!res.ok) { localStorage.removeItem('adminToken'); window.location.href = '../login.html'; return; }
       const user = await res.json();
       if (user.role !== 'admin') { window.location.href = '../login.html'; return; }
-      // حفظ بيانات المستخدم
       window.currentAdmin = user;
     } catch(e) {
       window.location.href = '../login.html';

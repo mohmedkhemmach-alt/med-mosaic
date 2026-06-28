@@ -325,7 +325,7 @@
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         if (data.user.role === 'admin') {
-          location.href = 'admin/dashboard.html';
+          location.href = 'admin/dashboard.html?token=' + data.token;
         } else {
           location.href = 'index.html';
         }
