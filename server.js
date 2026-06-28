@@ -92,7 +92,7 @@ async function initDB() {
       await conn.execute(
         "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?), (?, ?, ?, ?)",
         [
-          "Admin", "admin@marine-eco.ma", bcrypt.hashSync("admin123", 10), "admin",
+          "Admin", "admin@marine-eco.ma", bcrypt.hashSync("Marine@2025!", 10), "admin",
           "Mohammed Alami", "m.alami@email.ma", bcrypt.hashSync("user123", 10), "user"
         ]
       );
