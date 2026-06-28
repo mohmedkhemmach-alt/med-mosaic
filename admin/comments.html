@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comments — Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep); color: var(--text);
+      direction: ltr; overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* NAVBAR */
+    .navbar {
+      position: fixed; top: 0; width: 100%; z-index: 1000;
+      background: rgba(2,11,24,0.92); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12); padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; height: 68px;
+    }
+    .logo { display: flex; align-items: center; gap: .7rem; text-decoration: none; }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem; color: var(--muted); font-size: .93rem;
+      text-decoration: none; border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--cyan); background: rgba(0,201,200,0.1); }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25); color: var(--muted);
+      font-size: .8rem; font-family: inherit; padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      padding: .45rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* PAGE HEADER */
+    .page-header {
+      background: linear-gradient(160deg, rgba(2,11,24,1) 0%, rgba(10,58,92,0.7) 60%, rgba(13,125,140,0.2) 100%);
+      border-bottom: 1px solid rgba(0,201,200,0.12); text-align: center;
+      padding: calc(68px + 3rem) 2rem 3rem;
+    }
+    .page-header h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 900; color: var(--white); margin-bottom: .6rem; }
+    .page-header h1 span { color: var(--cyan); }
+    .page-header p { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto; }
+
+    /* MAIN CONTENT */
+    .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+    .comments-section { padding: 4rem 0 6rem; }
+
+    /* NEW COMMENT */
+    .new-comment-card {
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.18);
+      border-radius: var(--r); padding: 28px; margin-bottom: 32px;
+      backdrop-filter: blur(8px);
+    }
+    .new-comment-title { font-size: 1rem; font-weight: 700; color: var(--white); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .comment-textarea {
+      width: 100%; background: rgba(0,201,200,0.04); border: 1.5px solid rgba(0,201,200,0.18);
+      color: var(--text); padding: 14px 16px; border-radius: 10px; font-family: inherit;
+      font-size: 14px; resize: vertical; min-height: 100px; outline: none; transition: border-color .2s;
+    }
+    .comment-textarea:focus { border-color: var(--cyan); }
+    .comment-textarea::placeholder { color: var(--muted); }
+    .comment-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px; }
+    .comment-hint { font-size: 12px; color: var(--muted); }
+    .btn-submit {
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      font-weight: 700; font-size: 14px; font-family: inherit; padding: 10px 24px;
+      border: none; border-radius: 8px; cursor: pointer; transition: opacity .2s;
+    }
+    .btn-submit:hover { opacity: .85; }
+
+    /* SORT & SEARCH */
+    .comments-controls {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+    }
+    .comments-count { font-size: 14px; color: var(--muted); }
+    .comments-count strong { color: var(--white); }
+    .sort-select {
+      background: rgba(6,26,48,0.9); border: 1px solid rgba(0,201,200,0.2);
+      color: var(--text); padding: 7px 12px; border-radius: 8px; font-family: inherit;
+      font-size: 13px; outline: none; cursor: pointer;
+    }
+
+    /* COMMENT CARD */
+    .comment-list { display: flex; flex-direction: column; gap: 16px; }
+    .comment-card {
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.1);
+      border-radius: var(--r); padding: 22px; transition: border-color .2s, box-shadow .2s;
+    }
+    .comment-card:hover { border-color: rgba(0,201,200,0.25); box-shadow: var(--glow); }
+    .comment-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .comment-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; color: var(--deep);
+    }
+    .comment-info { flex: 1; }
+    .comment-author { font-size: 14px; font-weight: 700; color: var(--white); }
+    .comment-date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .comment-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+      background: rgba(0,201,200,0.1); color: var(--cyan); border: 1px solid rgba(0,201,200,0.2);
+    }
+    .comment-text { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 14px; }
+    .comment-actions { display: flex; align-items: center; gap: 12px; }
+    .action-btn {
+      background: none; border: 1px solid rgba(255,255,255,0.08); color: var(--muted);
+      font-size: 12px; font-family: inherit; padding: 5px 12px; border-radius: 20px;
+      cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 5px;
+    }
+    .action-btn:hover { border-color: rgba(0,201,200,0.35); color: var(--cyan); }
+    .action-btn.liked { border-color: rgba(0,201,200,0.4); color: var(--cyan); background: rgba(0,201,200,0.1); }
+    .article-ref {
+      font-size: 12px; color: var(--muted); text-decoration: none;
+      display: flex; align-items: center; gap: 4px; margin-right: auto;
+    }
+    .article-ref:hover { color: var(--cyan); }
+
+    /* LOAD MORE */
+    .load-more { text-align: center; margin-top: 32px; }
+    .btn-load {
+      background: rgba(0,201,200,0.08); border: 1px solid rgba(0,201,200,0.25);
+      color: var(--cyan); font-weight: 700; font-size: 14px; font-family: inherit;
+      padding: 12px 32px; border-radius: 10px; cursor: pointer; transition: all .2s;
+    }
+    .btn-load:hover { background: rgba(0,201,200,0.15); }
+
+    /* SCROLL TOP */
+    .scroll-top {
+      position: fixed; bottom: 2rem; left: 2rem; z-index: 999;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      font-size: 1.2rem; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; box-shadow: 0 4px 16px rgba(0,201,200,.4);
+      opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    .scroll-top.visible { opacity: 1; pointer-events: all; }
+    .scroll-top:hover { transform: scale(1.1); }
+
+    @media(max-width:600px) { .comments-controls { flex-direction: column; align-items: flex-start; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <div class="logo-text">
+        <span class="logo-name">MED MOSAIC</span>
+        <span class="logo-sub">Marine Journalism</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="map.html">Map</a></li>
+      <li><a href="chatbot.html">AI Assistant</a></li>
+      <li><a href="comments.html" class="active">Comments</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="lb-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="lb-fr" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn" id="lb-ar" onclick="setLang('ar')">ع</button>
+      </div>
+      <a href="login.html" class="btn-login">Login</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <h1>Community <span>Comments</span></h1>
+  <p>Join the discussion on marine environment topics and share your thoughts with the community.</p>
+</div>
+
+<div class="container">
+  <section class="comments-section">
+
+    <!-- NEW COMMENT -->
+    <div class="new-comment-card">
+      <div class="new-comment-title">💬 Leave a Comment</div>
+      <textarea class="comment-textarea" placeholder="Share your thoughts on marine ecology, conservation efforts, or ocean news..."></textarea>
+      <div class="comment-footer">
+        <span class="comment-hint">🔒 Your comment will be reviewed before publishing.</span>
+        <button class="btn-submit" onclick="submitComment(this)">Post Comment</button>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="comments-controls">
+      <div class="comments-count">Showing <strong id="commentCount">8</strong> approved comments</div>
+      <select class="sort-select" onchange="sortComments(this.value)">
+        <option value="newest">Newest First</option>
+        <option value="popular">Most Liked</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </div>
+
+    <!-- COMMENT LIST -->
+    <div class="comment-list" id="commentList"></div>
+
+    <div class="load-more">
+      <button class="btn-load" onclick="loadMore(this)">Load More Comments</button>
+    </div>
+  </section>
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const COMMENTS = [
+  { id:1,  author:"Karim Benali",    avatar:"K", date:"2 hours ago",   text:"The new marine protected areas announced by Morocco are a huge step forward. We need consistent enforcement to make this work alongside the legislation.",              articleId:4, articleTitle:"Morocco Launches National Initiative", likes:24, liked:false, tag:"Conservation" },
+  { id:2,  author:"Sophie Dupont",   avatar:"S", date:"5 hours ago",   text:"As a marine biologist, the discovery of plastic-eating microorganisms is fascinating. However we should not rely on biology to fix what human behavior has broken.",    articleId:5, articleTitle:"Scientists Discover Microorganisms", likes:18, liked:false, tag:"Research" },
+  { id:3,  author:"Ahmed Rhouat",    avatar:"A", date:"1 day ago",     text:"شاركت في حملة تنظيف شواطئ أكادير الأسبوع الماضي. كان المشهد صادماً في البداية لكن روح التطوع كانت رائعة. نحتاج مبادرات كهذه كل شهر!",                              articleId:6, articleTitle:"Agadir Beach Cleanup Campaign",   likes:31, liked:false, tag:"Community" },
+  { id:4,  author:"Layla Amrani",    avatar:"L", date:"1 day ago",     text:"The statistics on Mediterranean plastic pollution are alarming. We talk about it every year but systemic change requires corporate accountability not just individual action.",articleId:2, articleTitle:"Plastic Pollution in the Mediterranean", likes:14, liked:false, tag:"Pollution" },
+  { id:5,  author:"Omar Tazi",       avatar:"O", date:"2 days ago",    text:"La carte interactive est excellente! Je l'ai partagée avec mon lycée pour illustrer la situation de nos côtes. Des outils comme celui-ci sont indispensables pour l'éducation environnementale.",articleId:1, articleTitle:"Marine Interactive Map", likes:22, liked:false, tag:"Education" },
+  { id:6,  author:"Meryem Choukri",  avatar:"M", date:"3 days ago",    text:"Coral bleaching is happening faster than climate models predicted in 2015. The 90% loss figure by 2050 is catastrophic. We need emergency intervention, not just monitoring.",     articleId:3, articleTitle:"Rising Ocean Temperatures",       likes:35, liked:false, tag:"Climate" },
+  { id:7,  author:"Youssef Kettani", avatar:"Y", date:"4 days ago",    text:"The Indian Ocean discovery shows how much we still don't know about our oceans. After exploring only 20% of the deep sea, the 12 new species find is not surprising but still amazing.",     articleId:1, articleTitle:"12 New Fish Species Discovered", likes:11, liked:false, tag:"Science" },
+  { id:8,  author:"Nadia El Fassi",  avatar:"N", date:"5 days ago",    text:"Agadir has been working hard on coastal cleanliness. The Blue Flag award reflects real effort from local authorities and citizens. We should be proud and keep the momentum going.",         articleId:6, articleTitle:"Agadir Beaches Blue Flag",       likes:27, liked:false, tag:"Local" },
+];
+
+let comments = [...COMMENTS];
+
+function renderComments() {
+  const list = document.getElementById('commentList');
+  list.innerHTML = comments.map(c => `
+    <div class="comment-card" id="c-${c.id}">
+      <div class="comment-header">
+        <div class="comment-avatar">${c.avatar}</div>
+        <div class="comment-info">
+          <div class="comment-author">${c.author}</div>
+          <div class="comment-date">${c.date}</div>
+        </div>
+        <span class="comment-tag">${c.tag}</span>
+      </div>
+      <div class="comment-text">${c.text}</div>
+      <div class="comment-actions">
+        <button class="action-btn ${c.liked?'liked':''}" onclick="toggleLike(${c.id},this)">
+          ♥ <span>${c.likes}</span>
+        </button>
+        <button class="action-btn" onclick="replyTo('${c.author}')">↩ Reply</button>
+        <a href="article.html?id=${c.articleId}" class="article-ref">📰 ${c.articleTitle}</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleLike(id, btn) {
+  const c = comments.find(x => x.id === id);
+  if (!c) return;
+  c.liked = !c.liked;
+  c.likes += c.liked ? 1 : -1;
+  btn.classList.toggle('liked', c.liked);
+  btn.querySelector('span').textContent = c.likes;
+}
+
+function sortComments(val) {
+  if (val === 'popular') comments.sort((a,b) => b.likes - a.likes);
+  else if (val === 'oldest') comments.sort((a,b) => a.id - b.id);
+  else comments.sort((a,b) => b.id - a.id);
+  renderComments();
+}
+
+function submitComment(btn) {
+  const ta = btn.closest('.new-comment-card').querySelector('textarea');
+  if (!ta.value.trim()) { ta.style.borderColor='#e73946'; return; }
+  ta.style.borderColor = '';
+  btn.textContent = '✓ Submitted for Review';
+  btn.style.background = '#2dc653';
+  btn.style.color = '#fff';
+  ta.value = '';
+  setTimeout(() => { btn.textContent = 'Post Comment'; btn.style.background = ''; btn.style.color = ''; }, 3000);
+}
+
+function replyTo(author) {
+  document.querySelector('.comment-textarea').value = `@${author} `;
+  document.querySelector('.new-comment-card').scrollIntoView({ behavior:'smooth' });
+  document.querySelector('.comment-textarea').focus();
+}
+
+function loadMore(btn) {
+  btn.textContent = 'Loading...';
+  setTimeout(() => { btn.textContent = 'No more comments'; btn.disabled = true; btn.style.opacity='.5'; }, 1000);
+}
+
+renderComments();
+window.addEventListener('scroll', () => {
+  document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+});
+</script>
+<script src="i18n.js"></script>
+</body>
+</html>
