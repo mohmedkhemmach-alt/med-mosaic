@@ -172,18 +172,7 @@
     @media(max-width:600px) { .comments-controls { flex-direction: column; align-items: flex-start; } }
   </style>
 <script>
-// Auto-add token to all admin nav links
-window.addEventListener("DOMContentLoaded",function(){
-  var token=localStorage.getItem("adminToken");
-  if(!token){window.location.href="../login.html";return;}
-  window.adminToken=token;
-  document.querySelectorAll(".nav-item").forEach(function(a){
-    var href=a.getAttribute("href");
-    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
-      a.setAttribute("href",href+"?token="+token);
-    }
-  });
-});
+// Restore saved language on page load (handled by i18n.js)
 </script>
 </head>
 <body>
@@ -191,17 +180,37 @@ window.addEventListener("DOMContentLoaded",function(){
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="logo">
+      <svg width="40" height="40" viewBox="0 0 80 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pen nib (mast top) -->
+        <polygon points="40,2 35,14 40,11 45,14" fill="#00c9c8"/>
+        <rect x="38" y="10" width="4" height="3" fill="#00c9c8"/>
+        <circle cx="40" cy="12" r="1.5" fill="#020b18"/>
+        <!-- Mast -->
+        <rect x="39" y="13" width="2.5" height="45" fill="#00c9c8"/>
+        <!-- Left main sail -->
+        <path d="M40 16 L12 57 L40 57 Z" fill="rgba(0,201,200,0.8)"/>
+        <!-- Right small sail -->
+        <path d="M40.5 30 L62 54 L40.5 54 Z" fill="rgba(0,201,200,0.55)"/>
+        <!-- Horizontal boom line -->
+        <line x1="14" y1="57" x2="64" y2="57" stroke="#00c9c8" stroke-width="1.5"/>
+        <!-- Hull -->
+        <path d="M14 59 Q40 68 66 59 L62 66 Q40 74 18 66 Z" fill="#00c9c8"/>
+        <!-- Wave 1 -->
+        <path d="M18 76 Q27 72 36 76 Q45 80 54 76 Q63 72 70 76" stroke="#00c9c8" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+        <!-- Wave 2 -->
+        <path d="M22 83 Q31 79 40 83 Q49 87 58 83" stroke="rgba(0,201,200,0.45)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      </svg>
       <div class="logo-text">
         <span class="logo-name">MED MOSAIC</span>
         <span class="logo-sub">Marine Journalism</span>
       </div>
     </a>
     <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="news.html">News</a></li>
-      <li><a href="map.html">Map</a></li>
-      <li><a href="chatbot.html">AI Assistant</a></li>
-      <li><a href="comments.html" class="active">Comments</a></li>
+      <li><a href="index.html" data-i18n="nav_home">Home</a></li>
+      <li><a href="news.html" data-i18n="nav_news">News</a></li>
+      <li><a href="map.html" data-i18n="nav_map">Map</a></li>
+      <li><a href="chatbot.html" data-i18n="nav_ai">AI Assistant</a></li>
+      <li><a href="comments.html" class="active" data-i18n="nav_comments">Comments</a></li>
     </ul>
     <div class="nav-actions">
       <div class="lang-switcher">
@@ -209,14 +218,14 @@ window.addEventListener("DOMContentLoaded",function(){
         <button class="lang-btn" id="lb-fr" onclick="setLang('fr')">FR</button>
         <button class="lang-btn" id="lb-ar" onclick="setLang('ar')">ع</button>
       </div>
-      <a href="login.html" class="btn-login">Login</a>
+      <a href="login.html" class="btn-login" data-i18n="nav_login">Login</a>
     </div>
   </div>
 </nav>
 
 <div class="page-header">
-  <h1>Community <span>Comments</span></h1>
-  <p>Join the discussion on marine environment topics and share your thoughts with the community.</p>
+  <h1 data-i18n="comments_title">Community <span>Comments</span></h1>
+  <p data-i18n="comments_subtitle">Join the discussion on marine environment topics and share your thoughts with the community.</p>
 </div>
 
 <div class="container">
@@ -224,21 +233,21 @@ window.addEventListener("DOMContentLoaded",function(){
 
     <!-- NEW COMMENT -->
     <div class="new-comment-card">
-      <div class="new-comment-title">💬 Leave a Comment</div>
-      <textarea class="comment-textarea" placeholder="Share your thoughts on marine ecology, conservation efforts, or ocean news..."></textarea>
+      <div class="new-comment-title">💬 <span data-i18n="comments_leave">Leave a Comment</span></div>
+      <textarea class="comment-textarea" data-i18n-placeholder="comments_placeholder" placeholder="Share your thoughts on marine ecology, conservation efforts, or ocean news..."></textarea>
       <div class="comment-footer">
-        <span class="comment-hint">🔒 Your comment will be reviewed before publishing.</span>
-        <button class="btn-submit" onclick="submitComment(this)">Post Comment</button>
+        <span class="comment-hint">🔒 <span data-i18n="comments_review">Your comment will be reviewed before publishing.</span></span>
+        <button class="btn-submit" onclick="submitComment(this)" data-i18n="comments_post">Post Comment</button>
       </div>
     </div>
 
     <!-- CONTROLS -->
     <div class="comments-controls">
-      <div class="comments-count">Showing <strong id="commentCount">8</strong> approved comments</div>
+      <div class="comments-count" data-i18n-count="true">Showing <strong id="commentCount">8</strong> approved comments</div>
       <select class="sort-select" onchange="sortComments(this.value)">
-        <option value="newest">Newest First</option>
-        <option value="popular">Most Liked</option>
-        <option value="oldest">Oldest First</option>
+        <option value="newest" data-i18n="comments_sort_newest">Newest First</option>
+        <option value="popular" data-i18n="comments_sort_popular">Most Liked</option>
+        <option value="oldest" data-i18n="comments_sort_oldest">Oldest First</option>
       </select>
     </div>
 
@@ -246,7 +255,7 @@ window.addEventListener("DOMContentLoaded",function(){
     <div class="comment-list" id="commentList"></div>
 
     <div class="load-more">
-      <button class="btn-load" onclick="loadMore(this)">Load More Comments</button>
+      <button class="btn-load" onclick="loadMore(this)" data-i18n="comments_load_more">Load More Comments</button>
     </div>
   </section>
 </div>
