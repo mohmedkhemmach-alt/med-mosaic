@@ -105,6 +105,19 @@
     @media(max-width:1100px){.services-grid{grid-template-columns:repeat(2,1fr);}}
     @media(max-width:900px){.row2{grid-template-columns:1fr;}.services-grid{grid-template-columns:1fr 1fr;}}
   </style>
+<script>
+(async function(){
+  const token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  try{
+    const res=await fetch("/api/auth/me",{headers:{"Authorization":"Bearer "+token}});
+    if(!res.ok){localStorage.removeItem("adminToken");window.location.href="../login.html";return;}
+    const user=await res.json();
+    if(user.role!=="admin"){window.location.href="../login.html";return;}
+    window.currentAdmin=user;window.adminToken=token;
+  }catch(e){window.location.href="../login.html";}
+})();
+</script>
 </head>
 <body>
 

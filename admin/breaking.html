@@ -60,6 +60,19 @@
     .ai-result.visible{display:block;}
     .char-count{font-size:11px;color:var(--muted);text-align:right;margin-top:-12px;margin-bottom:12px;}
   </style>
+<script>
+(async function(){
+  const token=localStorage.getItem("adminToken");
+  if(!token){window.location.href="../login.html";return;}
+  try{
+    const res=await fetch("/api/auth/me",{headers:{"Authorization":"Bearer "+token}});
+    if(!res.ok){localStorage.removeItem("adminToken");window.location.href="../login.html";return;}
+    const user=await res.json();
+    if(user.role!=="admin"){window.location.href="../login.html";return;}
+    window.currentAdmin=user;window.adminToken=token;
+  }catch(e){window.location.href="../login.html";}
+})();
+</script>
 </head>
 <body>
 <aside class="sidebar">
