@@ -27,8 +27,12 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port:     process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 5,
-  charset:   'UTF8MB4_UNICODE_CI'
+  connectionLimit: 5
+});
+
+// Set charset after connection
+pool.on('connection', (conn) => {
+  conn.query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 });
 
 // ===== INIT DATABASE TABLES =====
