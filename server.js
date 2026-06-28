@@ -9,7 +9,7 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const mysql = require("mysql2/promise");
+const mysql = require("mysql2");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -28,18 +28,13 @@ const pool = mysql.createPool({
   port:     process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 5,
-  decimalNumbers: true,
-  supportBigNumbers: true,
-  dateStrings: true
-});
+  charset: 'UTF8MB4_UNICODE_CI'
+}).promise();
 
 // ===== INIT DATABASE TABLES =====
 async function initDB() {
   const conn = await pool.getConnection();
   try {
-    await conn.query("SET NAMES 'utf8mb4'");
-    await conn.query("SET CHARACTER SET 'utf8mb4'");
-    await conn.query("SET SESSION collation_connection = 'utf8mb4_unicode_ci'");
     await conn.execute(`CREATE TABLE IF NOT EXISTS users (
       id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(100) NOT NULL,
