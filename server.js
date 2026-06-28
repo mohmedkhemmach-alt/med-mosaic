@@ -27,15 +27,19 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port:     process.env.DB_PORT || 3306,
   waitForConnections: true,
-  connectionLimit: 5
+  connectionLimit: 5,
+  decimalNumbers: true,
+  supportBigNumbers: true,
+  dateStrings: true
 });
 
 // ===== INIT DATABASE TABLES =====
 async function initDB() {
   const conn = await pool.getConnection();
   try {
-    await conn.execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
-    await conn.execute("SET CHARACTER SET utf8mb4");
+    await conn.query("SET NAMES 'utf8mb4'");
+    await conn.query("SET CHARACTER SET 'utf8mb4'");
+    await conn.query("SET SESSION collation_connection = 'utf8mb4_unicode_ci'");
     await conn.execute(`CREATE TABLE IF NOT EXISTS users (
       id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(100) NOT NULL,
