@@ -81,6 +81,25 @@
     .modal-footer{padding:16px 24px;border-top:1px solid rgba(0,201,200,0.08);display:flex;gap:10px;justify-content:flex-end;}
     .btn-cancel{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--muted);font-weight:600;font-size:13px;font-family:inherit;padding:8px 18px;border-radius:8px;cursor:pointer;}
     .btn-cancel:hover{color:var(--white);}
+
+    /* IMAGE UPLOAD */
+    .img-upload-area{border:2px dashed rgba(0,201,200,0.3);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(0,201,200,0.03);position:relative;}
+    .img-upload-area:hover,.img-upload-area.drag-over{border-color:var(--cyan);background:rgba(0,201,200,0.08);}
+    .img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .img-upload-icon{font-size:2rem;margin-bottom:8px;}
+    .img-upload-label{font-size:13px;color:var(--muted);}
+    .img-upload-hint{font-size:11px;color:var(--muted);margin-top:4px;opacity:.7;}
+    .img-preview-wrap{position:relative;border-radius:8px;overflow:hidden;margin-top:10px;display:none;}
+    .img-preview-wrap img{width:100%;height:160px;object-fit:cover;display:block;}
+    .img-preview-info{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(0,0,0,0.3);font-size:11px;color:var(--muted);}
+    .img-remove-btn{background:rgba(231,57,70,0.2);border:none;color:#f1727d;font-size:11px;font-family:inherit;padding:3px 10px;border-radius:5px;cursor:pointer;}
+    .compress-badge{background:rgba(45,198,83,0.15);color:#2dc653;font-size:10px;padding:2px 7px;border-radius:8px;font-weight:700;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;}
+    .toast.success{background:rgba(45,198,83,0.15);border:1px solid rgba(45,198,83,0.4);color:#2dc653;}
+    .toast.error{background:rgba(231,57,70,0.12);border:1px solid rgba(231,57,70,0.3);color:#f1727d;}
+    .toast.show{opacity:1;}
   </style>
 <script>
 // Auto-add token to all admin nav links
@@ -184,13 +203,24 @@ window.addEventListener("DOMContentLoaded",function(){
       <button class="modal-close" onclick="closeModal()">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Emoji</label>
-        <input class="form-input" id="fEmoji" value="📰" style="width:80px">
+      <div style="display:grid;grid-template-columns:80px 1fr;gap:14px" class="form-group">
+        <div>
+          <label class="form-label">Emoji</label>
+          <input class="form-input" id="fEmoji" value="📰">
+        </div>
+        <div>
+          <label class="form-label">Tag / Category</label>
+          <select class="form-select" id="fTag">
+            <option>Biodiversity</option><option>Pollution</option><option>Climate</option>
+            <option>Conservation</option><option>Research</option><option>Tourism</option>
+            <option>Marine Life</option><option>Alert</option>
+          </select>
+        </div>
       </div>
+
       <div class="form-group">
-        <label class="form-label">Title (Arabic)</label>
-        <input class="form-input" id="fTitle" placeholder="عنوان المقال بالعربية">
+        <label class="form-label">Title (Arabic) <span style="color:#e73946">*</span></label>
+        <input class="form-input" id="fTitle" placeholder="عنوان المقال بالعربية" dir="rtl">
       </div>
       <div class="form-group">
         <label class="form-label">Title (French)</label>
@@ -200,24 +230,43 @@ window.addEventListener("DOMContentLoaded",function(){
         <label class="form-label">Title (English)</label>
         <input class="form-input" id="fTitleEn" placeholder="Article title in English">
       </div>
+
       <div class="form-group">
-        <label class="form-label">Content</label>
-        <textarea class="form-textarea" id="fContent" placeholder="Article content..."></textarea>
+        <label class="form-label">Excerpt <span style="color:var(--muted);font-weight:400">(short summary shown on cards)</span></label>
+        <textarea class="form-textarea" id="fExcerpt" style="min-height:60px" maxlength="300" placeholder="Brief description shown in article cards (max 300 chars)…"></textarea>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div class="form-group">
-          <label class="form-label">Tag / Category</label>
-          <select class="form-select" id="fTag">
-            <option>Biodiversity</option><option>Pollution</option><option>Climate</option>
-            <option>Conservation</option><option>Research</option><option>Tourism</option>
-          </select>
+
+      <div class="form-group">
+        <label class="form-label">Cover Image</label>
+        <div class="img-upload-area" id="uploadArea" onclick="document.getElementById('fImageFile').click()">
+          <input type="file" id="fImageFile" accept="image/*" style="display:none" onchange="handleImageSelect(event)">
+          <div class="img-upload-icon">🖼️</div>
+          <div class="img-upload-label">Click or drag an image here</div>
+          <div class="img-upload-hint">JPG, PNG, WebP — will be compressed to ≤150 KB</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select" id="fStatus">
-            <option value="draft">Draft</option><option value="pending">Pending Review</option><option value="published">Published</option>
-          </select>
+        <div class="img-preview-wrap" id="imgPreviewWrap">
+          <img id="imgPreview" src="" alt="preview">
+          <div class="img-preview-info">
+            <span id="imgFileName">—</span>
+            <span class="compress-badge" id="compressBadge">✓ Compressed</span>
+            <button class="img-remove-btn" onclick="removeImage()">✕ Remove</button>
+          </div>
         </div>
+        <input type="hidden" id="fCoverImage" value="">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Content <span style="color:#e73946">*</span></label>
+        <textarea class="form-textarea" id="fContent" style="min-height:160px" placeholder="Article content… (HTML supported)"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="fStatus">
+          <option value="draft">📝 Draft</option>
+          <option value="pending">⏳ Pending Review</option>
+          <option value="published">✅ Published</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
@@ -228,88 +277,311 @@ window.addEventListener("DOMContentLoaded",function(){
 </div>
 
 <script>
-let articles = [
-  {id:1,emoji:"🐠",title:"12 New Fish Species in the Indian Ocean",tag:"Biodiversity",author:"Dr. Sara Benali",status:"published",views:2140,date:"Jan 15"},
-  {id:2,emoji:"🏭",title:"Plastic Pollution in the Mediterranean",tag:"Pollution",author:"Editorial Team",status:"published",views:3850,date:"Jan 12"},
-  {id:3,emoji:"🌡️",title:"Rising Ocean Temperatures Threaten Coral Reefs",tag:"Climate",author:"Ahmed Hosseini",status:"pending",views:1920,date:"Jan 10"},
-  {id:4,emoji:"🌿",title:"Morocco Launches Coastline Protection Initiative",tag:"Conservation",author:"Nadia Mansouri",status:"published",views:4100,date:"Jan 8"},
-  {id:5,emoji:"🔬",title:"Microorganisms Feed on Ocean Plastic",tag:"Research",author:"Dr. Yasmine Ouzou",status:"published",views:2780,date:"Jan 5"},
-  {id:6,emoji:"🧹",title:"Agadir Beach Cleanup — 15 Tons of Waste Removed",tag:"Conservation",author:"Rachid Ziyani",status:"draft",views:1560,date:"Jan 3"},
-];
-let editId = null;
+// ── TOKEN ──
+const TOKEN = localStorage.getItem('adminToken');
+if (!TOKEN) window.location.href = '../login.html';
 
-function statusClass(s){return s==='published'?'s-pub':s==='pending'?'s-pend':s==='archived'?'s-arch':'s-draft';}
+let articles = [];
+let editId   = null;
 
-function renderTable(list){
-  const tbody=document.getElementById('articlesTbody');
-  document.getElementById('artCount').textContent='('+list.length+')';
-  tbody.innerHTML=list.map(a=>`
+// ── TOAST ──
+function toast(msg, type = 'success') {
+  let el = document.getElementById('toastEl');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toastEl';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── LOAD ARTICLES FROM API ──
+async function loadArticles() {
+  try {
+    // جلب published + draft + pending — نرسل token للـ admin
+    const res = await fetch('/api/articles?limit=50&page=1&status=published', {
+      headers: { Authorization: `Bearer ${TOKEN}` }
+    });
+    const data = await res.json();
+    let list = data.articles || [];
+
+    // جلب drafts وpending كمان
+    const res2 = await fetch('/api/articles?limit=50&page=1&status=draft', {
+      headers: { Authorization: `Bearer ${TOKEN}` }
+    });
+    const data2 = await res2.json();
+    const res3 = await fetch('/api/articles?limit=50&page=1&status=pending', {
+      headers: { Authorization: `Bearer ${TOKEN}` }
+    });
+    const data3 = await res3.json();
+
+    articles = [...list, ...(data2.articles || []), ...(data3.articles || [])];
+    // ترتيب حسب id تنازلياً
+    articles.sort((a, b) => b.id - a.id);
+    renderTable(articles);
+  } catch(e) {
+    toast('Failed to load articles: ' + e.message, 'error');
+  }
+}
+
+// ── RENDER TABLE ──
+function statusClass(s) {
+  return s === 'published' ? 's-pub' : s === 'pending' ? 's-pend' : s === 'archived' ? 's-arch' : 's-draft';
+}
+
+function renderTable(list) {
+  document.getElementById('artCount').textContent = '(' + list.length + ')';
+  document.getElementById('articlesTbody').innerHTML = list.map(a => `
     <tr id="row-${a.id}">
-      <td class="emoji-cell">${a.emoji}</td>
-      <td><div class="art-title">${a.title}<small>${a.tag}</small></div></td>
-      <td><span class="status s-draft">${a.tag}</span></td>
-      <td style="color:var(--muted);font-size:12px">${a.author}</td>
+      <td class="emoji-cell">${a.emoji || '📰'}</td>
+      <td>
+        <div class="art-title">
+          ${a.title}
+          <small>${a.tag || ''} ${a.excerpt ? '· ' + a.excerpt.slice(0,50) + '…' : ''}</small>
+        </div>
+      </td>
+      <td><span class="status s-draft">${a.tag || '—'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${a.author || '—'}</td>
       <td><span class="status ${statusClass(a.status)}">${a.status}</span></td>
-      <td style="color:var(--muted)">${a.views.toLocaleString()}</td>
-      <td style="color:var(--muted);font-size:12px">${a.date}</td>
+      <td style="color:var(--muted)">${(a.views || 0).toLocaleString()}</td>
+      <td style="color:var(--muted);font-size:12px">${a.created_at ? new Date(a.created_at).toLocaleDateString('en-GB') : '—'}</td>
       <td>
         <div class="action-row">
           <button class="action-btn" onclick="editArticle(${a.id})">✏️ Edit</button>
-          <button class="action-btn" onclick="toggleStatus(${a.id})">${a.status==='published'?'⬇ Unpublish':'✓ Publish'}</button>
+          <button class="action-btn" onclick="toggleStatus(${a.id})">${a.status === 'published' ? '⬇ Unpublish' : '✓ Publish'}</button>
           <button class="action-btn del" onclick="deleteArticle(${a.id})">🗑</button>
         </div>
       </td>
     </tr>
-  `).join('');
+  `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No articles yet</td></tr>';
 }
 
-function filterTable(q){renderTable(articles.filter(a=>a.title.toLowerCase().includes(q.toLowerCase())||a.author.toLowerCase().includes(q.toLowerCase())));}
-function filterStatus(s){renderTable(s?articles.filter(a=>a.status===s):articles);}
-function filterTag(t){renderTable(t?articles.filter(a=>a.tag===t):articles);}
+function filterTable(q)   { renderTable(articles.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || (a.author||'').toLowerCase().includes(q.toLowerCase()))); }
+function filterStatus(s)  { renderTable(s ? articles.filter(a => a.status === s) : articles); }
+function filterTag(t)     { renderTable(t ? articles.filter(a => a.tag === t) : articles); }
 
-function openModal(){editId=null;document.getElementById('modalTitle').textContent='New Article';document.getElementById('fTitle').value='';document.getElementById('fTitleFr').value='';document.getElementById('fTitleEn').value='';document.getElementById('fContent').value='';document.getElementById('fEmoji').value='📰';document.getElementById('modalOverlay').classList.add('open');}
-function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
-function closeOnBg(e){if(e.target===document.getElementById('modalOverlay'))closeModal();}
-
-function editArticle(id){
-  const a=articles.find(x=>x.id===id);if(!a)return;
-  editId=id;
-  document.getElementById('modalTitle').textContent='Edit Article';
-  document.getElementById('fEmoji').value=a.emoji;
-  document.getElementById('fTitle').value=a.title;
-  document.getElementById('fTitleFr').value='';
-  document.getElementById('fTitleEn').value='';
-  document.getElementById('fContent').value='';
-  document.getElementById('fStatus').value=a.status;
+// ── MODAL ──
+function openModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'New Article';
+  document.getElementById('fTitle').value    = '';
+  document.getElementById('fTitleFr').value  = '';
+  document.getElementById('fTitleEn').value  = '';
+  document.getElementById('fExcerpt').value  = '';
+  document.getElementById('fContent').value  = '';
+  document.getElementById('fEmoji').value    = '📰';
+  document.getElementById('fStatus').value   = 'draft';
+  document.getElementById('fCoverImage').value = '';
+  removeImage();
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-function saveArticle(){
-  const title=document.getElementById('fTitle').value.trim();
-  if(!title){alert('Title is required');return;}
-  if(editId){
-    const a=articles.find(x=>x.id===editId);
-    if(a){a.title=title;a.emoji=document.getElementById('fEmoji').value;a.tag=document.getElementById('fTag').value;a.status=document.getElementById('fStatus').value;}
+function closeModal()      { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeOnBg(e)      { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function editArticle(id) {
+  const a = articles.find(x => x.id === id);
+  if (!a) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent   = 'Edit Article';
+  document.getElementById('fEmoji').value             = a.emoji   || '📰';
+  document.getElementById('fTitle').value             = a.title   || '';
+  document.getElementById('fTitleFr').value           = a.title_fr || '';
+  document.getElementById('fTitleEn').value           = a.title_en || '';
+  document.getElementById('fExcerpt').value           = a.excerpt  || '';
+  document.getElementById('fContent').value           = a.content  || '';
+  document.getElementById('fTag').value               = a.tag      || 'Biodiversity';
+  document.getElementById('fStatus').value            = a.status   || 'draft';
+  document.getElementById('fCoverImage').value        = a.cover_image || '';
+  if (a.cover_image) {
+    document.getElementById('imgPreview').src         = a.cover_image;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('uploadArea').style.display     = 'none';
+    document.getElementById('imgFileName').textContent      = 'Current image';
+    document.getElementById('compressBadge').textContent    = '✓ Saved';
   } else {
-    articles.unshift({id:Date.now(),emoji:document.getElementById('fEmoji').value,title,tag:document.getElementById('fTag').value,author:'Admin',status:document.getElementById('fStatus').value,views:0,date:'Today'});
+    removeImage();
   }
-  renderTable(articles);closeModal();
+  document.getElementById('modalOverlay').classList.add('open');
 }
 
-function toggleStatus(id){
-  const a=articles.find(x=>x.id===id);
-  if(!a)return;
-  a.status=a.status==='published'?'draft':'published';
-  renderTable(articles);
+// ── IMAGE COMPRESSION ──
+function handleImageSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, 150 * 1024, (compressedDataUrl, finalSize) => {
+    document.getElementById('fCoverImage').value        = compressedDataUrl;
+    document.getElementById('imgPreview').src           = compressedDataUrl;
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('uploadArea').style.display     = 'none';
+    document.getElementById('imgFileName').textContent      = file.name;
+    const kb = Math.round(finalSize / 1024);
+    document.getElementById('compressBadge').textContent    = `✓ ${kb} KB`;
+  });
 }
 
-function deleteArticle(id){
-  if(!confirm('Delete this article?'))return;
-  articles=articles.filter(x=>x.id!==id);
-  renderTable(articles);
+function compressImage(file, maxBytes, callback) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      let quality = 0.85;
+      let w = img.width;
+      let h = img.height;
+      // تصغير الأبعاد إذا كانت كبيرة جداً
+      const MAX_W = 1200;
+      if (w > MAX_W) { h = Math.round(h * MAX_W / w); w = MAX_W; }
+
+      const canvas = document.createElement('canvas');
+      canvas.width  = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+
+      function tryCompress(q) {
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', q);
+        // حساب الحجم التقريبي (base64 → bytes)
+        const approxBytes = Math.round((dataUrl.length - 22) * 0.75);
+        if (approxBytes > maxBytes && q > 0.2) {
+          tryCompress(q - 0.1);
+        } else {
+          callback(dataUrl, approxBytes);
+        }
+      }
+      tryCompress(quality);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
-renderTable(articles);
+function removeImage() {
+  document.getElementById('fCoverImage').value            = '';
+  document.getElementById('imgPreview').src               = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('uploadArea').style.display     = 'block';
+  document.getElementById('fImageFile').value             = '';
+}
+
+// Drag & drop
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('uploadArea');
+  if (!area) return;
+  area.addEventListener('dragover',  e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      compressImage(file, 150 * 1024, (dataUrl, size) => {
+        document.getElementById('fCoverImage').value        = dataUrl;
+        document.getElementById('imgPreview').src           = dataUrl;
+        document.getElementById('imgPreviewWrap').style.display = 'block';
+        document.getElementById('uploadArea').style.display     = 'none';
+        document.getElementById('imgFileName').textContent      = file.name;
+        document.getElementById('compressBadge').textContent    = `✓ ${Math.round(size/1024)} KB`;
+      });
+    }
+  });
+});
+
+// ── SAVE ARTICLE (API) ──
+async function saveArticle() {
+  const title   = document.getElementById('fTitle').value.trim();
+  const content = document.getElementById('fContent').value.trim();
+  if (!title)   { toast('Title is required', 'error'); return; }
+  if (!content) { toast('Content is required', 'error'); return; }
+
+  const btn = document.querySelector('.modal-footer .btn-primary');
+  btn.textContent = '⏳ Saving…';
+  btn.disabled = true;
+
+  const payload = {
+    title,
+    title_fr:    document.getElementById('fTitleFr').value.trim() || null,
+    title_en:    document.getElementById('fTitleEn').value.trim() || null,
+    excerpt:     document.getElementById('fExcerpt').value.trim() || null,
+    cover_image: document.getElementById('fCoverImage').value     || null,
+    content,
+    tag:    document.getElementById('fTag').value,
+    emoji:  document.getElementById('fEmoji').value || '📰',
+    status: document.getElementById('fStatus').value,
+  };
+
+  try {
+    let res;
+    if (editId) {
+      res = await fetch(`/api/articles/${editId}`, {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+        body:    JSON.stringify(payload),
+      });
+    } else {
+      res = await fetch('/api/articles', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+        body:    JSON.stringify(payload),
+      });
+    }
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Server error');
+    }
+
+    toast(editId ? '✓ Article updated!' : '✓ Article published!');
+    closeModal();
+    loadArticles(); // أعد تحميل القائمة من DB
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  } finally {
+    btn.textContent = 'Save Article';
+    btn.disabled = false;
+  }
+}
+
+// ── TOGGLE STATUS (API) ──
+async function toggleStatus(id) {
+  const a = articles.find(x => x.id === id);
+  if (!a) return;
+  const newStatus = a.status === 'published' ? 'draft' : 'published';
+  try {
+    const res = await fetch(`/api/articles/${id}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN}` },
+      body:    JSON.stringify({ ...a, status: newStatus }),
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast(`Article ${newStatus === 'published' ? 'published ✓' : 'unpublished'}`);
+    loadArticles();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── DELETE ARTICLE (API) ──
+async function deleteArticle(id) {
+  if (!confirm('Delete this article permanently?')) return;
+  try {
+    const res = await fetch(`/api/articles/${id}`, {
+      method:  'DELETE',
+      headers: { Authorization: `Bearer ${TOKEN}` },
+    });
+    if (!res.ok) throw new Error('Failed');
+    toast('Article deleted');
+    loadArticles();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── INIT ──
+loadArticles();
 </script>
 </body>
 </html>
