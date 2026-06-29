@@ -141,7 +141,7 @@
 // Auto-add token to all admin nav links
 window.addEventListener("DOMContentLoaded",function(){
   var token=localStorage.getItem("adminToken");
-  if(!token){window.location.href="../login.html";return;}
+  
   window.adminToken=token;
   document.querySelectorAll(".nav-item").forEach(function(a){
     var href=a.getAttribute("href");
@@ -1260,8 +1260,19 @@ async function generateArticle(btn) {
   const ctx   = document.getElementById('genContext').value.trim();
   if (!topic) { showToast('⚠️ Please enter a topic', 'error'); return; }
 
-  const content = await callServer('/api/ai/generate',
-    { topic: topic + (ctx ? ' — ' + ctx : '') + ' (' + cat + ')', lang, tone:'informative' },
+  const langName = LANGS[lang] || 'English';
+  const prompt = `Write a comprehensive marine environment article in ${langName} about: "${topic}" (Category: ${cat}).${ctx ? '\nAdditional context: ' + ctx : ''}
+
+Structure the article with:
+- A compelling H2 title
+- Introduction paragraph (2-3 sentences)
+- 3-4 H3 subheadings with detailed paragraphs
+- Conclusion with key takeaways
+
+Use HTML tags: <h2>, <h3>, <p>, <strong>, <em>. Write at least 400 words. Be informative and scientific.`;
+
+  const content = await callServer('/api/ai/chat',
+    { message: prompt },
     'genOutput', 'genOutputText', btn
   ).catch(() => null);
 
@@ -1281,7 +1292,7 @@ async function generateLatestNews(btn) {
   try {
     const res = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: `Write a latest-news block in ${LANGS[lang]} about: "${topic}" (${type}).${ctx?'\nContext: '+ctx:''}
 Return exactly:
 HEADLINE: [headline]
@@ -1326,13 +1337,13 @@ async function translateContent(btn) {
   const txt = document.getElementById('transOutputText');
   out.style.display = 'block'; txt.textContent = '⏳ Translating…';
   try {
-    const res = await fetch('/api/ai/translate', {
+    const res = await fetch('/api/ai/chat', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({ text, targetLangs:[tgt] })
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ message: `Translate the following text from ${LANGS[src]||src} to ${LANGS[tgt]||tgt}. Return ONLY the translated text, no explanations:\n\n${text}` })
     });
     const data = await res.json();
-    const result = data.translations?.[tgt] || data.error || 'No result';
+    const result = data.reply || data.content || data.error || 'No result';
     txt.textContent = result;
     // زر نشر الترجمة
     const pb = document.getElementById('transPubBtn');
@@ -1350,7 +1361,7 @@ async function summarizeContent(btn) {
   const text = document.getElementById('sumInput').value;
   const lang = document.getElementById('sumLang').value;
   if (!text) { showToast('⚠️ Please enter content', 'error'); return; }
-  const summary = await callServer('/api/ai/summarize', { text, lang }, 'sumOutput','sumOutputText', btn).catch(()=>null);
+  const summary = await callServer('/api/ai/chat', { message: `Summarize this article in ${LANGS[lang] || 'English'} in 3-5 concise sentences:\n${text}` }, 'sumOutput','sumOutputText', btn).catch(()=>null);
   if (summary) {
     const pb = document.getElementById('sumPubBtn');
     if (pb) { pb.style.display='inline-flex'; pb.onclick = ()=>showPublishPanel(`<p>${summary}</p>`, text.slice(0,80)); }
@@ -1365,7 +1376,7 @@ async function suggestTags(btn) {
   btn.disabled = true; const prev = btn.innerHTML; btn.innerHTML = '⏳ Analyzing…';
   try {
     const res = await fetch('/api/ai/chat', {
-      method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}` },
+      method:'POST', headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ message:`Suggest 4-6 tags for this marine content from: Marine Ecology, Pollution, Climate Change, Conservation, Research, Biodiversity, Tourism, Marine Life, Coral Reefs, Ocean Chemistry.
 Return ONLY comma-separated tags:\n${text}` })
     });
@@ -1389,12 +1400,13 @@ async function generateHeadlines(btn) {
   const out=document.getElementById('breakOutput'); const txt=document.getElementById('breakOutputText');
   out.style.display='block'; txt.textContent='⏳ Generating…';
   try {
-    const res = await fetch('/api/ai/headlines', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body: JSON.stringify({ topic: desc })
+    const res = await fetch('/api/ai/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: `Generate 5 breaking news headlines in ${LANGS[lang]||'English'} for this event: "${desc}".
+Format each headline on a new line starting with a number. Make them urgent and compelling.` })
     });
     const data = await res.json();
-    const lines = data.headlines ? data.headlines.map(h=>h.text).join('\n') : (data.error || 'No result');
+    const lines = data.reply || data.content || data.error || 'No result';
     txt.textContent = lines;
     const pb = document.getElementById('breakPubBtn');
     if (pb) { pb.style.display='inline-flex'; pb.onclick=()=>showPublishPanel(`<p>${lines.replace(/\n/g,'<br>')}</p>`, desc); }
@@ -1410,7 +1422,7 @@ async function moderateComment(btn) {
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Analyzing…';
   try {
     const res = await fetch('/api/ai/chat', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ message:`Moderate this comment for a marine news platform.
 First line MUST be exactly: VERDICT: APPROVE or VERDICT: REJECT or VERDICT: REVIEW_NEEDED
 Then 1-2 sentence reason.\nComment: "${text}"` })
@@ -1623,13 +1635,18 @@ async function runGenerateAndPublish() {
   try {
     // Step 1 — توليد
     pText.textContent = '🤖 Generating article with AI…'; bar.style.width = '25%';
-    const res1 = await fetch('/api/ai/generate', {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body: JSON.stringify({ topic: topic+(context?'—'+context:'')+'('+category+')', lang, tone })
+    const langName = LANGS[lang] || 'English';
+    const prompt = `Write a comprehensive marine environment article in ${langName} about: "${topic+(context?' — '+context:'')}" (Category: ${category}).
+Structure: H2 title, introduction, 3-4 H3 sections with paragraphs, conclusion. Use HTML tags. 400+ words.`;
+    const res1 = await fetch('/api/ai/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: prompt })
     });
     const d1 = await res1.json();
     if (d1.error) throw new Error(d1.error);
-    const content = d1.content;
+    const articleContent = d1.reply || d1.content || '';
+    if (!articleContent) throw new Error('No content generated');
+    const content = articleContent;
     bar.style.width = '60%';
 
     // Step 2 — نشر
@@ -1686,7 +1703,7 @@ async function generateAlertAndPublish(btn) {
     // Step 1 — توليد التحذير
     const res1 = await fetch('/api/ai/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: `Write a ${type} in ${LANGS[lang] || 'Arabic'}:
 Situation: ${situation}
 Severity: ${severity}
