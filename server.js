@@ -441,7 +441,7 @@ You work on a trilingual news website (Arabic/French/English) dedicated to marin
 });
 
 // POST /api/ai/generate  ← ai.html (توليد مقال)
-app.post('/api/ai/generate', authMiddleware, async (req, res) => {
+app.post('/api/ai/generate', async (req, res) => {
   const { topic, lang = 'ar', tone = 'informative' } = req.body;
   if (!topic) return res.status(400).json({ error: 'Topic required' });
   try {
@@ -457,7 +457,7 @@ Use HTML tags (p, h2, blockquote, ul/li). Make it 400-600 words. Marine environm
 });
 
 // POST /api/ai/translate  ← ai.html (ترجمة)
-app.post('/api/ai/translate', authMiddleware, async (req, res) => {
+app.post('/api/ai/translate', async (req, res) => {
   const { text, targetLangs = ['fr', 'en'] } = req.body;
   if (!text) return res.status(400).json({ error: 'Text required' });
   try {
@@ -474,7 +474,7 @@ app.post('/api/ai/translate', authMiddleware, async (req, res) => {
 });
 
 // POST /api/ai/headlines  ← ai.html (أخبار عاجلة)
-app.post('/api/ai/headlines', authMiddleware, async (req, res) => {
+app.post('/api/ai/headlines', async (req, res) => {
   const { topic = 'marine environment Morocco' } = req.body;
   try {
     const reply = await callXAI([
@@ -491,7 +491,7 @@ Return ONLY the JSON array, no other text.` }
 });
 
 // POST /api/ai/summarize  ← ai.html (تلخيص)
-app.post('/api/ai/summarize', authMiddleware, async (req, res) => {
+app.post('/api/ai/summarize', async (req, res) => {
   const { text, lang = 'ar' } = req.body;
   if (!text) return res.status(400).json({ error: 'Text required' });
   try {
