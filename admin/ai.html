@@ -521,11 +521,11 @@ window.addEventListener("DOMContentLoaded",function(){
 </main>
 
 <script>
-// ══════ CONFIG ══════
-const GROQ_API_KEY = "YOUR_API_KEY_HERE";
-const GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL        = "llama-3.3-70b-versatile";
-const LANGS        = {en:"English", fr:"French", ar:"Arabic"};
+// ══════ CONFIG — لا API key هنا ══════
+const TOKEN = localStorage.getItem('adminToken');
+if (!TOKEN) window.location.href = '../login.html';
+
+const LANGS = {en:"English", fr:"French", ar:"Arabic"};
 let reqCount = 0;
 
 // ══════ TABS ══════
@@ -544,7 +544,6 @@ function setPill(inputId, lang, btn){
 }
 
 // ══════ IMAGE RENDERER ══════
-// cfg maps: prefix -> { gridId, kwId, countId, editorId, defaultCols }
 const IMG_CFG = {
   gen:   { gridId:'genImgGrid',   kwId:'genImgKw',   countId:'genImgCount',   editorId:'genImgEditor',   cols:[1,2,3,3] },
   ln:    { gridId:'lnImgGrid',    kwId:'lnImgKw',    countId:'lnImgCount',    editorId:null,              cols:[1,2,3,3] },
@@ -600,39 +599,39 @@ function downloadImg(btn){
 
 function showImgEditor(prefix, defaultKw){
   const cfg = IMG_CFG[prefix];
-  if(cfg.editorId){
-    const ed = document.getElementById(cfg.editorId);
-    if(ed){ ed.style.display='block'; }
-  }
-  // set default keyword from topic if provided
+  if(cfg.editorId){ const ed=document.getElementById(cfg.editorId); if(ed) ed.style.display='block'; }
   const kwEl = document.getElementById(cfg.kwId);
   if(kwEl && defaultKw) kwEl.value = defaultKw;
   renderImgs(prefix);
 }
 
-// ══════ CORE API ══════
+// ══════ CORE — يستدعي الـ server بدل xAI مباشرة ══════
 function bumpUsage(){
   reqCount++;
   document.getElementById('reqCount').textContent = reqCount;
   document.getElementById('reqBar').style.width   = Math.min(reqCount*5,100)+'%';
 }
 
-async function callGroq(sys, user, outputId, textId, btn){
+async function callServer(endpoint, body, outputId, textId, btn){
   const out = document.getElementById(outputId);
   const txt = document.getElementById(textId);
   out.style.display='block'; txt.textContent='⏳ Generating…';
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Working…';
   try{
-    const res = await fetch(GROQ_URL,{
+    const res = await fetch(endpoint, {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-      body:JSON.stringify({model:MODEL,max_tokens:1200,messages:[{role:'system',content:sys},{role:'user',content:user}]})
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify(body)
     });
     const data = await res.json();
-    txt.textContent = data.choices?.[0]?.message?.content || 'No response.';
+    if(data.error) throw new Error(data.error);
+    // استخراج النص حسب الـ endpoint
+    const text = data.content || data.summary || data.reply || JSON.stringify(data);
+    txt.textContent = text;
     bumpUsage();
+    return text;
   }catch(e){ txt.textContent='❌ Error: '+e.message; }
-  btn.disabled=false; btn.innerHTML=prev;
+  finally{ btn.disabled=false; btn.innerHTML=prev; }
 }
 
 // ══════ TOOL 1 — ARTICLE GENERATOR ══════
@@ -641,10 +640,9 @@ function generateArticle(btn){
   const cat   = document.getElementById('genCategory').value;
   const lang  = document.getElementById('genLang').value;
   const ctx   = document.getElementById('genContext').value;
-  callGroq(
-    `You are a professional marine journalist for Med Mosaic, Morocco. Write in ${LANGS[lang]}.`,
-    `Write a complete news article in ${LANGS[lang]} about: "${topic}". Category: ${cat}.${ctx?' Context: '+ctx:''}\nInclude: headline, lead paragraph, 3-4 body paragraphs, expert pull quote, conclusion.`,
-    'genOutput','genOutputText',btn
+  callServer('/api/ai/generate',
+    { topic: topic + (ctx?' — '+ctx:'') + ' ('+cat+')', lang, tone:'informative' },
+    'genOutput','genOutputText', btn
   ).then(()=>{ showImgEditor('gen', topic); });
 }
 
@@ -656,16 +654,18 @@ async function generateLatestNews(btn){
   const ctx   = document.getElementById('lnContext').value;
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
   try{
-    const res = await fetch(GROQ_URL,{
+    const res = await fetch('/api/ai/chat', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-      body:JSON.stringify({model:MODEL,max_tokens:600,messages:[
-        {role:'system',content:`Marine news editor. Write ONLY in ${LANGS[lang]}.`},
-        {role:'user',content:`Write a latest-news block in ${LANGS[lang]} about: "${topic}" (${type}).${ctx?'\nContext: '+ctx:''}\nReturn:\nHEADLINE: [headline]\nPARAGRAPH: [2-3 sentences]`}
-      ]})
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        message: `Write a latest-news block in ${LANGS[lang]} about: "${topic}" (${type}).${ctx?'\nContext: '+ctx:''}
+Return exactly:
+HEADLINE: [headline]
+PARAGRAPH: [2-3 sentences]`
+      })
     });
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content||'';
+    const text = data.reply || '';
     const headline  = (text.match(/HEADLINE:\s*(.+)/i)||[])[1]?.trim() || topic;
     const paragraph = (text.match(/PARAGRAPH:\s*([\s\S]+)/i)||[])[1]?.trim() || text;
     document.getElementById('lnHeadline').textContent      = headline;
@@ -674,7 +674,6 @@ async function generateLatestNews(btn){
     const prev2 = document.getElementById('lnPreview');
     prev2.style.direction=isRTL?'rtl':'ltr'; prev2.style.textAlign=isRTL?'right':'left';
     document.getElementById('lnOutput').style.display='block';
-    // set keyword from topic and render images
     document.getElementById('lnImgKw').value = topic;
     renderImgs('ln');
     bumpUsage();
@@ -683,27 +682,48 @@ async function generateLatestNews(btn){
 }
 
 // ══════ TOOL 3 — TRANSLATE ══════
-function translateContent(btn){
+async function translateContent(btn){
   const src  = document.getElementById('srcLang').value;
   const tgt  = document.getElementById('tgtLang').value;
   const text = document.getElementById('translateInput').value;
-  callGroq(
-    'Professional translator for marine journalism. Preserve tone and scientific terminology.',
-    `Translate from ${LANGS[src]} to ${LANGS[tgt]}. Output ONLY the translation.\n\n${text}`,
-    'transOutput','transOutputText',btn
-  ).then(()=>{ showImgEditor('trans','ocean sea marine'); });
+  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Translating…';
+  const out = document.getElementById('transOutput');
+  const txt = document.getElementById('transOutputText');
+  out.style.display='block'; txt.textContent='⏳ Translating…';
+  try{
+    const res = await fetch('/api/ai/translate', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ text, targetLangs:[tgt] })
+    });
+    const data = await res.json();
+    txt.textContent = data.translations?.[tgt] || data.error || 'No result';
+    bumpUsage();
+    showImgEditor('trans','ocean sea marine');
+  }catch(e){ txt.textContent='❌ Error: '+e.message; }
+  btn.disabled=false; btn.innerHTML=prev;
 }
 
 // ══════ TOOL 4 — SUMMARIZE ══════
-function summarizeContent(btn){
+async function summarizeContent(btn){
   const text = document.getElementById('sumInput').value;
-  const len  = document.getElementById('sumLen').value;
   const lang = document.getElementById('sumLang').value;
-  callGroq(
-    'Marine news editor. Write clear, factual article summaries.',
-    `Summarize this marine article into ${len} in ${LANGS[lang]}. Output ONLY the summary.\n\n${text}`,
-    'sumOutput','sumOutputText',btn
-  ).then(()=>{ showImgEditor('sum','ocean marine environment'); });
+  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Summarizing…';
+  const out = document.getElementById('sumOutput');
+  const txt = document.getElementById('sumOutputText');
+  out.style.display='block'; txt.textContent='⏳ Summarizing…';
+  try{
+    const res = await fetch('/api/ai/summarize', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ text, lang })
+    });
+    const data = await res.json();
+    txt.textContent = data.summary || data.error || 'No result';
+    bumpUsage();
+    showImgEditor('sum','ocean marine environment');
+  }catch(e){ txt.textContent='❌ Error: '+e.message; }
+  btn.disabled=false; btn.innerHTML=prev;
 }
 
 // ══════ TOOL 5 — TAGS ══════
@@ -711,16 +731,18 @@ async function suggestTags(btn){
   const text = document.getElementById('tagInput').value;
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Analyzing…';
   try{
-    const res = await fetch(GROQ_URL,{
+    const res = await fetch('/api/ai/chat', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-      body:JSON.stringify({model:MODEL,max_tokens:200,messages:[
-        {role:'system',content:'Content classifier for marine news. Return ONLY comma-separated tags, nothing else.'},
-        {role:'user',content:`Suggest 4-6 tags for this marine content from: Marine Ecology, Pollution, Climate Change, Conservation, Research, Biodiversity, Tourism, Marine Life, Coral Reefs, Ocean Chemistry.\n\n${text}`}
-      ]})
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        message: `Suggest 4-6 tags for this marine content from: Marine Ecology, Pollution, Climate Change, Conservation, Research, Biodiversity, Tourism, Marine Life, Coral Reefs, Ocean Chemistry.
+Return ONLY comma-separated tags, nothing else.
+
+${text}`
+      })
     });
     const data = await res.json();
-    const tags = (data.choices?.[0]?.message?.content||'').split(',').map(t=>t.trim()).filter(Boolean);
+    const tags = (data.reply||'').split(',').map(t=>t.trim()).filter(Boolean);
     const chips = document.getElementById('tagChips');
     chips.style.display='block';
     chips.innerHTML = tags.map(t=>`<span class="tag-chip">${t}</span>`).join('');
@@ -732,14 +754,29 @@ async function suggestTags(btn){
 }
 
 // ══════ TOOL 6 — BREAKING ══════
-function generateHeadlines(btn){
+async function generateHeadlines(btn){
   const desc = document.getElementById('breakInput').value;
   const lang = document.getElementById('breakLang').value;
-  callGroq(
-    'Breaking news editor for a marine platform. Write urgent, punchy headlines.',
-    `Generate 3 breaking news headlines in ${LANGS[lang]} for: "${desc}". Each on new line with emoji (🔴🟠🟢). Max 12 words each.`,
-    'breakOutput','breakOutputText',btn
-  ).then(()=>{ showImgEditor('break', desc.split(' ').slice(0,3).join(' ')); });
+  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
+  const out = document.getElementById('breakOutput');
+  const txt = document.getElementById('breakOutputText');
+  out.style.display='block'; txt.textContent='⏳ Generating…';
+  try{
+    const res = await fetch('/api/ai/headlines', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ topic: desc })
+    });
+    const data = await res.json();
+    if(data.headlines){
+      txt.textContent = data.headlines.map(h=>h.text).join('\n');
+    } else {
+      txt.textContent = data.error || 'No result';
+    }
+    bumpUsage();
+    showImgEditor('break', desc.split(' ').slice(0,3).join(' '));
+  }catch(e){ txt.textContent='❌ Error: '+e.message; }
+  btn.disabled=false; btn.innerHTML=prev;
 }
 
 // ══════ TOOL 7 — MODERATE ══════
@@ -747,16 +784,19 @@ async function moderateComment(btn){
   const text = document.getElementById('modInput').value;
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Analyzing…';
   try{
-    const res = await fetch(GROQ_URL,{
+    const res = await fetch('/api/ai/chat', {
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_API_KEY},
-      body:JSON.stringify({model:MODEL,max_tokens:250,messages:[
-        {role:'system',content:'Content moderator. First line MUST be exactly: VERDICT: APPROVE or VERDICT: REJECT or VERDICT: REVIEW_NEEDED. Then 1-2 sentence reason.'},
-        {role:'user',content:`Moderate this comment for a marine news platform. Check: spam, hate speech, off-topic, misinformation.\n\nComment: "${text}"`}
-      ]})
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        message: `Moderate this comment for a marine news platform. Check: spam, hate speech, off-topic, misinformation.
+First line MUST be exactly: VERDICT: APPROVE or VERDICT: REJECT or VERDICT: REVIEW_NEEDED
+Then 1-2 sentence reason.
+
+Comment: "${text}"`
+      })
     });
     const data   = await res.json();
-    const result = data.choices?.[0]?.message?.content||'';
+    const result = data.reply || '';
     const verdict= (result.match(/VERDICT:\s*(APPROVE|REJECT|REVIEW_NEEDED)/i)||[])[1]||'REVIEW_NEEDED';
     const cls    = {APPROVE:'verdict-approve',REJECT:'verdict-reject',REVIEW_NEEDED:'verdict-review'};
     const ico    = {APPROVE:'✅',REJECT:'❌',REVIEW_NEEDED:'⚠️'};
@@ -775,10 +815,21 @@ function optimizeSEO(btn){
   const content  = document.getElementById('seoContent').value;
   const lang     = document.getElementById('seoLang').value;
   const audience = document.getElementById('seoAudience').value;
-  callGroq(
-    'SEO specialist for a marine journalism website.',
-    `Generate SEO package in ${LANGS[lang]} for:\nTitle: ${title}\n${content?'Content: '+content.substring(0,400):''}Audience: ${audience}\n\nProvide:\n1. SEO Title (≤60 chars)\n2. Meta Description (≤155 chars)\n3. URL Slug\n4. Focus Keyword\n5. 5 Secondary Keywords\n6. Open Graph Title\n7. Twitter Description`,
-    'seoOutput','seoOutputText',btn
+  callServer('/api/ai/chat',
+    { message: `Generate SEO package in ${LANGS[lang]} for:
+Title: ${title}
+${content?'Content: '+content.substring(0,400):''}
+Audience: ${audience}
+
+Provide:
+1. SEO Title (≤60 chars)
+2. Meta Description (≤155 chars)
+3. URL Slug
+4. Focus Keyword
+5. 5 Secondary Keywords
+6. Open Graph Title
+7. Twitter Description` },
+    'seoOutput','seoOutputText', btn
   ).then(()=>{ showImgEditor('seo', title); });
 }
 

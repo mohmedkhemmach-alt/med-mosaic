@@ -371,6 +371,114 @@ app.get("/api/stats", authMiddleware, adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// ===== XAI / GROK AI ROUTES =====
+
+// route مشترك — يستقبل طلبات من chatbot.html و ai.html
+async function callXAI(messages, maxTokens = 1024) {
+  const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model:      'grok-3-mini',
+      max_tokens: maxTokens,
+      messages
+    })
+  });
+  const data = await response.json();
+  if (data.error) throw new Error(data.error.message || 'xAI error');
+  return data.choices[0].message.content;
+}
+
+// POST /api/ai/chat  ← chatbot.html
+app.post('/api/ai/chat', async (req, res) => {
+  const { message, history = [] } = req.body;
+  if (!message) return res.status(400).json({ error: 'Message required' });
+  try {
+    const messages = [
+      {
+        role: 'system',
+        content: `You are a specialist assistant in marine environment, oceans, and marine biology.
+You work on a trilingual news website (Arabic/French/English) dedicated to marine environment.
+- Answer questions about oceans, fish, coral reefs, marine pollution, climate change
+- Respond in the SAME language the user writes in
+- Use emojis moderately
+- Stay on marine/ocean topics`
+      },
+      ...history,
+      { role: 'user', content: message }
+    ];
+    const reply = await callXAI(messages, 1024);
+    res.json({ reply });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/ai/generate  ← ai.html (توليد مقال)
+app.post('/api/ai/generate', authMiddleware, async (req, res) => {
+  const { topic, lang = 'ar', tone = 'informative' } = req.body;
+  if (!topic) return res.status(400).json({ error: 'Topic required' });
+  try {
+    const langLabel = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
+    const reply = await callXAI([
+      { role: 'system', content: 'You are a professional marine environment journalist.' },
+      { role: 'user',   content: `Write a complete ${tone} news article in ${langLabel} about: "${topic}".
+Structure: Title, Introduction paragraph, 2-3 body sections with H2 headers, Conclusion.
+Use HTML tags (p, h2, blockquote, ul/li). Make it 400-600 words. Marine environment focus.` }
+    ], 2000);
+    res.json({ content: reply });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/ai/translate  ← ai.html (ترجمة)
+app.post('/api/ai/translate', authMiddleware, async (req, res) => {
+  const { text, targetLangs = ['fr', 'en'] } = req.body;
+  if (!text) return res.status(400).json({ error: 'Text required' });
+  try {
+    const results = {};
+    for (const lang of targetLangs) {
+      const langLabel = lang === 'fr' ? 'French' : lang === 'en' ? 'English' : 'Arabic';
+      results[lang] = await callXAI([
+        { role: 'system', content: 'You are a professional translator. Translate accurately preserving HTML tags and marine terminology.' },
+        { role: 'user',   content: `Translate this to ${langLabel}. Keep all HTML tags intact. Return ONLY the translation:\n\n${text}` }
+      ], 2000);
+    }
+    res.json({ translations: results });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/ai/headlines  ← ai.html (أخبار عاجلة)
+app.post('/api/ai/headlines', authMiddleware, async (req, res) => {
+  const { topic = 'marine environment Morocco' } = req.body;
+  try {
+    const reply = await callXAI([
+      { role: 'system', content: 'You are a breaking news editor for a marine environment news site.' },
+      { role: 'user',   content: `Generate 5 breaking news headlines about: "${topic}".
+Format as JSON array: [{"text": "🔴 headline here", "severity": "high|medium|low"}]
+Return ONLY the JSON array, no other text.` }
+    ], 600);
+    // parse JSON بأمان
+    const clean = reply.replace(/```json|```/g, '').trim();
+    const headlines = JSON.parse(clean);
+    res.json({ headlines });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/ai/summarize  ← ai.html (تلخيص)
+app.post('/api/ai/summarize', authMiddleware, async (req, res) => {
+  const { text, lang = 'ar' } = req.body;
+  if (!text) return res.status(400).json({ error: 'Text required' });
+  try {
+    const langLabel = lang === 'ar' ? 'Arabic' : lang === 'fr' ? 'French' : 'English';
+    const reply = await callXAI([
+      { role: 'system', content: 'You are an expert content summarizer for a marine news website.' },
+      { role: 'user',   content: `Summarize in ${langLabel} in 2-3 sentences max (excerpt for article card):\n\n${text}` }
+    ], 300);
+    res.json({ summary: reply });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ===== START =====
 initDB().then(() => {
   app.listen(PORT, () => {
