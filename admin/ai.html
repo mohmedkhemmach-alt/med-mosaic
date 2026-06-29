@@ -141,11 +141,10 @@
 // Auto-add token to all admin nav links
 window.addEventListener("DOMContentLoaded",function(){
   var token=localStorage.getItem("adminToken");
-  
   window.adminToken=token;
   document.querySelectorAll(".nav-item").forEach(function(a){
     var href=a.getAttribute("href");
-    if(href </head></head> href!="#" </head></head> !href.startsWith("..") </head></head> !href.includes("token=")){
+    if(href && href!="#" && !href.startsWith("..") && !href.includes("token=")){
       a.setAttribute("href",href+"?token="+token);
     }
   });
