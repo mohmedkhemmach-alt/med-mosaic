@@ -375,6 +375,7 @@ app.get("/api/stats", authMiddleware, adminMiddleware, async (req, res) => {
 
 // route مشترك — يستقبل طلبات من chatbot.html و ai.html
 async function callXAI(messages, maxTokens = 1024) {
+  if (!process.env.XAI_API_KEY) throw new Error('XAI_API_KEY not set in environment');
   const response = await fetch('https://api.x.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -382,13 +383,17 @@ async function callXAI(messages, maxTokens = 1024) {
       'Authorization': `Bearer ${process.env.XAI_API_KEY}`
     },
     body: JSON.stringify({
-      model:      'grok-3-mini',
+      model:      'grok-3-mini-fast',
       max_tokens: maxTokens,
       messages
     })
   });
   const data = await response.json();
-  if (data.error) throw new Error(data.error.message || 'xAI error');
+  if (!response.ok || data.error) {
+    const msg = data.error?.message || JSON.stringify(data);
+    console.error('xAI API error:', msg);
+    throw new Error(msg);
+  }
   return data.choices[0].message.content;
 }
 
