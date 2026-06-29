@@ -301,31 +301,78 @@ window.addEventListener("DOMContentLoaded",function(){
 
           <!-- PUBLISH PANEL -->
           <div class="publish-panel" id="publishPanel">
-            <div class="publish-panel-title">🚀 Ready to Publish</div>
+            <div class="publish-panel-title">🚀 Ready to Publish — Review &amp; Confirm</div>
             <div class="publish-fields">
               <div>
-                <label class="qp-label">Title</label>
+                <label class="qp-label">Title <span style="color:#e73946">*</span></label>
                 <input class="qp-input" id="pubTitle" placeholder="Article title…">
               </div>
               <div>
                 <label class="qp-label">Status</label>
-                <select class="qp-select" id="pubStatus">
+                <select class="qp-select" id="pubStatusSel">
                   <option value="published">✅ Publish Now</option>
                   <option value="pending">⏳ Pending Review</option>
                   <option value="draft">📝 Save as Draft</option>
                 </select>
               </div>
+              <div>
+                <label class="qp-label">Category</label>
+                <select class="qp-select" id="pubTagSel">
+                  <option>Marine Ecology</option><option>Pollution</option><option>Climate</option>
+                  <option>Conservation</option><option>Research</option><option>Biodiversity</option>
+                  <option>Tourism</option><option>Alert</option>
+                </select>
+              </div>
+              <div>
+                <label class="qp-label">Language</label>
+                <select class="qp-select" id="pubLangSel">
+                  <option value="en">English</option>
+                  <option value="fr">Français</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </div>
               <div class="publish-excerpt">
                 <label class="qp-label">Excerpt <span style="color:var(--muted);font-weight:400">(auto-generated — edit if needed)</span></label>
-                <textarea class="qp-textarea" id="pubExcerpt" style="min-height:60px"></textarea>
+                <textarea class="qp-textarea" id="pubExcept" style="min-height:60px"></textarea>
               </div>
             </div>
+
+            <!-- COVER IMAGE SECTION -->
+            <div style="margin-bottom:14px">
+              <label class="qp-label">🖼️ Cover Image</label>
+              <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+                <div style="flex:1;min-width:200px">
+                  <input class="qp-input" id="pubCoverUrl" placeholder="Paste image URL… or pick from gallery below" style="margin-bottom:8px"
+                    oninput="if(this.value){document.getElementById('pubCoverImage').value=this.value;document.getElementById('pubImgPreview').src=this.value;document.getElementById('pubImgPreview').style.display='block';}">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <button class="btn-sec" onclick="pickEnvImg('pub')">🌊 Browse Eco Photos</button>
+                    <button class="btn-sec" onclick="document.getElementById('pubCoverImage').value='';document.getElementById('pubImgPreview').style.display='none';document.getElementById('pubCoverUrl').value=''">✕ Remove</button>
+                  </div>
+                </div>
+                <div>
+                  <img id="pubImgPreview" src="" alt="preview" style="display:none;width:180px;height:100px;object-fit:cover;border-radius:8px;border:1px solid rgba(0,201,200,.2)">
+                </div>
+              </div>
+              <input type="hidden" id="pubCoverImage">
+
+              <!-- ECO PHOTO GALLERY -->
+              <div id="pubImgGallery" style="display:none;margin-top:12px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  <input class="qp-input" id="pubGalleryKw" placeholder="Keywords: reef, ocean, morocco, fish…" style="flex:1" value="ocean reef morocco">
+                  <button class="btn-sec" onclick="loadPubGallery()">🔄 Refresh</button>
+                  <button class="btn-sec" onclick="document.getElementById('pubImgGallery').style.display='none'">✕</button>
+                </div>
+                <div id="pubGalleryGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px"></div>
+              </div>
+            </div>
+
             <div class="publish-actions">
               <button class="btn-publish" id="pubBtn" onclick="publishArticle()">🚀 Publish to Site</button>
               <button class="btn-draft" onclick="publishArticle('draft')">💾 Save as Draft</button>
-              <button class="btn-draft" onclick="document.getElementById('publishPanel').classList.remove('visible')">✕ Cancel</button>
+              <button class="btn-draft" onclick="publishArticle('pending')">⏳ Send for Review</button>
+              <button class="btn-draft" onclick="hidePublishPanel()">✕ Cancel</button>
             </div>
-            <div class="publish-status" id="pubStatus"></div>
+            <div class="publish-status" id="pubStatusMsg"></div>
           </div>
           <!-- IMAGE EDITOR -->
           <div class="img-editor" id="genImgEditor" style="display:none">
@@ -958,626 +1005,587 @@ window.addEventListener("DOMContentLoaded",function(){
 </main>
 
 <script>
-// ══════ CONFIG — لا API key هنا ══════
+// ══════════════════════════════════════════
+// MED MOSAIC — AI Services Hub (Clean JS)
+// ══════════════════════════════════════════
+
+// ── AUTH ──
 const TOKEN = localStorage.getItem('adminToken');
 if (!TOKEN) window.location.href = '../login.html';
 
-const LANGS = {en:"English", fr:"French", ar:"Arabic"};
+const LANGS = { en:'English', fr:'French', ar:'Arabic' };
 let reqCount = 0;
 
-// ══════ TABS ══════
-const ALL_TABS = ['generate','latestnews','translate','summarize','tags','breaking','moderate','seo','factcheck','newsletter','social','qa','report','caption','rewrite','interview','alert'];
-function showTab(name, card){
-  ALL_TABS.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t===name?'block':'none'; });
-  document.querySelectorAll('.service-card').forEach(c=>c.classList.remove('active'));
-  if(card) card.classList.add('active');
+// ── GLOBAL STATE ──
+let _generatedContent = ''; // HTML المولّد (للنشر)
+let _generatedTopic   = ''; // الموضوع
+
+// ══ TABS ══
+const ALL_TABS = ['generate','latestnews','translate','summarize','tags','breaking','moderate','seo',
+                  'factcheck','newsletter','social','qa','report','caption','rewrite','interview','alert'];
+
+function showTab(name, card) {
+  ALL_TABS.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.style.display = t === name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.service-card').forEach(c => c.classList.remove('active'));
+  if (card) card.classList.add('active');
 }
 
-// ══════ LANG PILLS ══════
-function setPill(inputId, lang, btn){
+// ══ LANG PILLS ══
+function setPill(inputId, lang, btn) {
   document.getElementById(inputId).value = lang;
-  btn.parentElement.querySelectorAll('.lang-pill').forEach(b=>b.classList.remove('active'));
+  btn.parentElement.querySelectorAll('.lang-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
-// ══════ IMAGE RENDERER ══════
+// ══ IMAGE RENDERER ══
 const IMG_CFG = {
-  gen:   { gridId:'genImgGrid',   kwId:'genImgKw',   countId:'genImgCount',   editorId:'genImgEditor',   cols:[1,2,3,3] },
-  ln:    { gridId:'lnImgGrid',    kwId:'lnImgKw',    countId:'lnImgCount',    editorId:null,              cols:[1,2,3,3] },
-  trans: { gridId:'transImgGrid', kwId:'transImgKw', countId:'transImgCount', editorId:'transImgEditor', cols:[1,2,3,3] },
-  sum:   { gridId:'sumImgGrid',   kwId:'sumImgKw',   countId:'sumImgCount',   editorId:'sumImgEditor',   cols:[1,1,1,1] },
-  break: { gridId:'breakImgGrid', kwId:'breakImgKw', countId:'breakImgCount', editorId:'breakImgEditor', cols:[1,1,1,1] },
-  seo:   { gridId:'seoImgGrid',   kwId:'seoImgKw',   countId:'seoImgCount',   editorId:'seoImgEditor',   cols:[1,1,1,1] },
+  gen:   { gridId:'genImgGrid',   kwId:'genImgKw',   countId:'genImgCount',   editorId:'genImgEditor'   },
+  ln:    { gridId:'lnImgGrid',    kwId:'lnImgKw',    countId:'lnImgCount',    editorId:null             },
+  trans: { gridId:'transImgGrid', kwId:'transImgKw', countId:'transImgCount', editorId:'transImgEditor' },
+  sum:   { gridId:'sumImgGrid',   kwId:'sumImgKw',   countId:'sumImgCount',   editorId:'sumImgEditor'   },
+  break: { gridId:'breakImgGrid', kwId:'breakImgKw', countId:'breakImgCount', editorId:'breakImgEditor' },
+  seo:   { gridId:'seoImgGrid',   kwId:'seoImgKw',   countId:'seoImgCount',   editorId:'seoImgEditor'   },
 };
 
-function renderImgs(prefix){
-  const cfg   = IMG_CFG[prefix];
-  const grid  = document.getElementById(cfg.gridId);
+function renderImgs(prefix) {
+  const cfg   = IMG_CFG[prefix]; if (!cfg) return;
+  const grid  = document.getElementById(cfg.gridId); if (!grid) return;
   const kw    = document.getElementById(cfg.kwId)?.value || 'ocean';
   const count = parseInt(document.getElementById(cfg.countId)?.value || '3');
-  const keywords = kw.split(',').map(k=>k.trim());
-  const colClass = ['','cols-1','cols-2','cols-3','cols-3'][count] || 'cols-3';
-  grid.className = 'img-grid ' + colClass;
+  const keywords = kw.split(',').map(k => k.trim());
+  grid.className = 'img-grid ' + (['','cols-1','cols-2','cols-3','cols-3'][count] || 'cols-3');
   grid.innerHTML = '';
-  for(let i=0;i<count;i++){
-    const seed = (keywords[i%keywords.length]||'ocean') + '_' + prefix + i + '_' + Date.now();
-    const slot = document.createElement('div');
+  for (let i = 0; i < count; i++) {
+    const kword = keywords[i % keywords.length] || 'ocean';
+    const seed  = kword + '_' + prefix + i + '_' + Date.now();
+    const slot  = document.createElement('div');
     slot.className = 'img-slot';
-    slot.dataset.seed = seed;
-    slot.dataset.kw   = keywords[i%keywords.length] || 'ocean';
+    slot.dataset.seed = seed; slot.dataset.kw = kword;
     slot.innerHTML = `
-      <img src="https://picsum.photos/seed/${encodeURIComponent(seed)}/700/394" alt="${keywords[i%keywords.length]||'ocean'}" loading="lazy"/>
+      <img src="https://picsum.photos/seed/${encodeURIComponent(seed)}/700/394" alt="${kword}" loading="lazy"/>
       <div class="img-slot-overlay">
-        <button class="img-act-btn" onclick="refreshSingleImg(this,'${prefix}',${i})">🔄 New</button>
+        <button class="img-act-btn" onclick="refreshImg(this,'${prefix}',${i})">🔄 New</button>
+        <button class="img-act-btn" onclick="useImgForArticle(this)">✅ Use</button>
         <button class="img-act-btn" onclick="downloadImg(this)">⬇️ Save</button>
       </div>
-      <div class="img-slot-label">
-        <span>📷 ${keywords[i%keywords.length]||'ocean'}</span>
-        <span style="opacity:.6;font-size:9px">#${i+1}</span>
-      </div>`;
+      <div class="img-slot-label"><span>📷 ${kword}</span><span style="opacity:.6;font-size:9px">#${i+1}</span></div>`;
     grid.appendChild(slot);
   }
 }
 
-function refreshSingleImg(btn, prefix, idx){
+function refreshImg(btn, prefix, idx) {
   const slot = btn.closest('.img-slot');
   const img  = slot.querySelector('img');
   const kw   = slot.dataset.kw || 'ocean';
-  const newSeed = kw + '_' + prefix + idx + '_' + Date.now();
-  img.src = `https://picsum.photos/seed/${encodeURIComponent(newSeed)}/700/394`;
+  img.src = `https://picsum.photos/seed/${kw}_${prefix}${idx}_${Date.now()}/700/394`;
 }
 
-function downloadImg(btn){
+function downloadImg(btn) {
   const img = btn.closest('.img-slot').querySelector('img');
-  const a   = document.createElement('a');
-  a.href = img.src; a.download = 'marine-img-'+Date.now()+'.jpg'; a.target='_blank';
-  a.click();
+  const a = document.createElement('a');
+  a.href = img.src; a.download = 'marine-img-' + Date.now() + '.jpg'; a.target = '_blank'; a.click();
 }
 
-function showImgEditor(prefix, defaultKw){
-  const cfg = IMG_CFG[prefix];
-  if(cfg.editorId){ const ed=document.getElementById(cfg.editorId); if(ed) ed.style.display='block'; }
+function useImgForArticle(btn) {
+  const img = btn.closest('.img-slot').querySelector('img');
+  document.getElementById('pubCoverImage').value = img.src;
+  document.getElementById('pubImgPreview').src   = img.src;
+  document.getElementById('pubImgPreview').style.display = 'block';
+  showToast('✅ Image selected for article!', 'success');
+}
+
+function showImgEditor(prefix, defaultKw) {
+  const cfg = IMG_CFG[prefix]; if (!cfg || !cfg.editorId) return;
+  const ed = document.getElementById(cfg.editorId); if (!ed) return;
+  ed.style.display = 'block';
   const kwEl = document.getElementById(cfg.kwId);
-  if(kwEl && defaultKw) kwEl.value = defaultKw;
+  if (kwEl && defaultKw) kwEl.value = defaultKw;
   renderImgs(prefix);
 }
 
-// ══════ CORE — يستدعي الـ server بدل xAI مباشرة ══════
-function bumpUsage(){
-  reqCount++;
-  document.getElementById('reqCount').textContent = reqCount;
-  document.getElementById('reqBar').style.width   = Math.min(reqCount*5,100)+'%';
+// ══ TOAST ══
+function showToast(msg, type = 'success') {
+  let t = document.getElementById('globalToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'globalToast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;font-family:Cairo,sans-serif;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.background = type === 'success' ? 'rgba(45,198,83,.15)' : 'rgba(231,57,70,.15)';
+  t.style.border      = type === 'success' ? '1px solid rgba(45,198,83,.4)' : '1px solid rgba(231,57,70,.3)';
+  t.style.color       = type === 'success' ? '#2dc653' : '#f1727d';
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.opacity = '0', 3000);
 }
 
-async function callServer(endpoint, body, outputId, textId, btn){
+// ══ USAGE COUNTER ══
+function bumpUsage() {
+  reqCount++;
+  const rc = document.getElementById('reqCount'); if (rc) rc.textContent = reqCount;
+  const rb = document.getElementById('reqBar');   if (rb) rb.style.width = Math.min(reqCount * 5, 100) + '%';
+}
+
+// ══════════════════════════════════
+// CORE API CALL — يستدعي الـ server
+// ══════════════════════════════════
+async function callServer(endpoint, body, outputId, textId, btn) {
   const out = document.getElementById(outputId);
   const txt = document.getElementById(textId);
-  out.style.display='block'; txt.textContent='⏳ Generating…';
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Working…';
-  try{
+  if (out) out.style.display = 'block';
+  if (txt) txt.innerHTML = '<span style="color:var(--muted)">⏳ Generating…</span>';
+  if (btn) { btn.disabled = true; btn._prev = btn.innerHTML; btn.innerHTML = '⏳ Working…'; }
+  try {
     const res = await fetch(endpoint, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
       body: JSON.stringify(body)
     });
     const data = await res.json();
-    if(data.error) throw new Error(data.error);
-    // استخراج النص حسب الـ endpoint
+    if (data.error) throw new Error(data.error);
     const text = data.content || data.summary || data.reply || JSON.stringify(data);
-    txt.textContent = text;
+    if (txt) {
+      if (endpoint.includes('/generate') || /<[ph][0-9>]/.test(text)) {
+        txt.innerHTML = text;
+      } else {
+        txt.textContent = text;
+      }
+    }
     bumpUsage();
     return text;
-  }catch(e){ txt.textContent='❌ Error: '+e.message; }
-  finally{ btn.disabled=false; btn.innerHTML=prev; }
+  } catch(e) {
+    if (txt) txt.textContent = '❌ Error: ' + e.message;
+    throw e;
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = btn._prev || btn.innerHTML; }
+  }
 }
 
-// ══════ TOOL 1 — ARTICLE GENERATOR ══════
-function generateArticle(btn){
-  const topic = document.getElementById('genTopic').value;
+// ══════════════════════════════════
+// PUBLISH HELPERS
+// ══════════════════════════════════
+
+// عرض publish panel بعد توليد أي محتوى
+function showPublishPanel(content, topic) {
+  _generatedContent = content;
+  _generatedTopic   = topic || '';
+  const panel = document.getElementById('publishPanel');
+  if (!panel) return;
+  panel.classList.add('visible');
+
+  // عنوان تلقائي
+  const plain = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const h1Match = content.match(/<h[12][^>]*>(.*?)<\/h[12]>/i);
+  const autoTitle = (h1Match?.[1] || plain).replace(/<[^>]+>/g,'').trim().slice(0, 200) || topic;
+  document.getElementById('pubTitle').value  = autoTitle;
+  document.getElementById('pubExcept').value = plain.slice(0, 280);
+
+  // reset status
+  const sm = document.getElementById('pubStatusMsg');
+  if (sm) { sm.className = 'publish-status'; sm.textContent = ''; }
+  const pb = document.getElementById('pubBtn');
+  if (pb) { pb.disabled = false; pb.textContent = '🚀 Publish to Site'; }
+
+  // reset image
+  document.getElementById('pubCoverImage').value = '';
+  document.getElementById('pubImgPreview').style.display = 'none';
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// نشر فعلي للـ DB
+async function publishArticle(forceStatus) {
+  const title   = document.getElementById('pubTitle').value.trim();
+  const excerpt = document.getElementById('pubExcept').value.trim();
+  const status  = forceStatus || document.getElementById('pubStatusSel').value || 'published';
+  const tag     = document.getElementById('pubTagSel').value;
+  const lang    = document.getElementById('pubLangSel').value;
+  const cover   = document.getElementById('pubCoverImage').value || null;
+
+  if (!title)            { showToast('⚠️ Please enter a title', 'error'); return; }
+  if (!_generatedContent){ showToast('⚠️ No content to publish', 'error'); return; }
+
+  const btn = document.getElementById('pubBtn');
+  btn.disabled = true; btn.textContent = '⏳ Publishing…';
+
+  try {
+    const res = await fetch('/api/articles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ title, content: _generatedContent, excerpt, tag, lang, cover_image: cover,
+                             emoji: '🌊', status })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+
+    const sm = document.getElementById('pubStatusMsg');
+    sm.className   = 'publish-status success';
+    sm.innerHTML   = status === 'published'
+      ? `✅ Published! <a href="/article.html?id=${data.id}" target="_blank" style="color:var(--cyan);font-weight:700">→ View Article #${data.id}</a>`
+      : `💾 Saved as ${status} — ID: #${data.id}`;
+    btn.textContent = '✅ Done!';
+    bumpUsage();
+    showToast(status === 'published' ? '✅ Article is live!' : '💾 Saved!');
+  } catch(e) {
+    const sm = document.getElementById('pubStatusMsg');
+    sm.className  = 'publish-status error';
+    sm.textContent = '❌ ' + e.message;
+    btn.textContent = '🚀 Publish to Site';
+    btn.disabled = false;
+  }
+}
+
+function hidePublishPanel() {
+  const panel = document.getElementById('publishPanel');
+  if (panel) panel.classList.remove('visible');
+}
+
+// ══════════════════════════════════
+// TOOL 1 — ARTICLE GENERATOR
+// ══════════════════════════════════
+async function generateArticle(btn) {
+  const topic = document.getElementById('genTopic').value.trim();
   const cat   = document.getElementById('genCategory').value;
   const lang  = document.getElementById('genLang').value;
-  const ctx   = document.getElementById('genContext').value;
-  callServer('/api/ai/generate',
-    { topic: topic + (ctx?' — '+ctx:'') + ' ('+cat+')', lang, tone:'informative' },
-    'genOutput','genOutputText', btn
-  ).then(()=>{ showImgEditor('gen', topic); });
+  const ctx   = document.getElementById('genContext').value.trim();
+  if (!topic) { showToast('⚠️ Please enter a topic', 'error'); return; }
+
+  const content = await callServer('/api/ai/generate',
+    { topic: topic + (ctx ? ' — ' + ctx : '') + ' (' + cat + ')', lang, tone:'informative' },
+    'genOutput', 'genOutputText', btn
+  ).catch(() => null);
+
+  if (content && content.length > 50) {
+    showPublishPanel(document.getElementById('genOutputText').innerHTML, topic);
+    showImgEditor('gen', topic);
+  }
 }
 
-// ══════ TOOL 2 — LATEST NEWS WRITER ══════
-async function generateLatestNews(btn){
+// ══ TOOL 2 — LATEST NEWS ══
+async function generateLatestNews(btn) {
   const topic = document.getElementById('lnTopic').value;
   const type  = document.getElementById('lnType').value;
   const lang  = document.getElementById('lnLang').value;
   const ctx   = document.getElementById('lnContext').value;
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
-  try{
+  btn.disabled = true; const prev = btn.innerHTML; btn.innerHTML = '⏳ Generating…';
+  try {
     const res = await fetch('/api/ai/chat', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({
-        message: `Write a latest-news block in ${LANGS[lang]} about: "${topic}" (${type}).${ctx?'\nContext: '+ctx:''}
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ message: `Write a latest-news block in ${LANGS[lang]} about: "${topic}" (${type}).${ctx?'\nContext: '+ctx:''}
 Return exactly:
 HEADLINE: [headline]
-PARAGRAPH: [2-3 sentences]`
-      })
+PARAGRAPH: [2-3 sentences]` })
     });
     const data = await res.json();
-    const text = data.reply || '';
+    const text  = data.reply || '';
     const headline  = (text.match(/HEADLINE:\s*(.+)/i)||[])[1]?.trim() || topic;
     const paragraph = (text.match(/PARAGRAPH:\s*([\s\S]+)/i)||[])[1]?.trim() || text;
     document.getElementById('lnHeadline').textContent      = headline;
     document.getElementById('lnParagraphText').textContent = paragraph;
-    const isRTL = lang==='ar';
-    const prev2 = document.getElementById('lnPreview');
-    prev2.style.direction=isRTL?'rtl':'ltr'; prev2.style.textAlign=isRTL?'right':'left';
-    document.getElementById('lnOutput').style.display='block';
+    const preview = document.getElementById('lnPreview');
+    preview.style.direction   = lang === 'ar' ? 'rtl' : 'ltr';
+    preview.style.textAlign   = lang === 'ar' ? 'right' : 'left';
+    document.getElementById('lnOutput').style.display = 'block';
     document.getElementById('lnImgKw').value = topic;
     renderImgs('ln');
+    // زر نشر خبر عاجل
+    const pubNews = document.getElementById('lnPublishBtn');
+    if (pubNews) {
+      pubNews.style.display = 'inline-flex';
+      pubNews.onclick = () => {
+        showPublishPanel(`<h2>${headline}</h2><p>${paragraph}</p>`, headline);
+        document.getElementById('tab-generate').scrollIntoView({ behavior:'smooth' });
+        document.getElementById('genCategory').value = 'Marine Life';
+        showToast('Content ready — scroll up to publish!');
+      };
+    }
     bumpUsage();
-  }catch(e){alert('Error: '+e.message);}
-  btn.disabled=false; btn.innerHTML=prev;
+  } catch(e) { showToast('❌ ' + e.message, 'error'); }
+  btn.disabled = false; btn.innerHTML = prev;
 }
 
-// ══════ TOOL 3 — TRANSLATE ══════
-async function translateContent(btn){
+// ══ TOOL 3 — TRANSLATE ══
+async function translateContent(btn) {
   const src  = document.getElementById('srcLang').value;
   const tgt  = document.getElementById('tgtLang').value;
   const text = document.getElementById('translateInput').value;
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Translating…';
+  if (!text) { showToast('⚠️ Please enter text to translate', 'error'); return; }
+  btn.disabled = true; const prev = btn.innerHTML; btn.innerHTML = '⏳ Translating…';
   const out = document.getElementById('transOutput');
   const txt = document.getElementById('transOutputText');
-  out.style.display='block'; txt.textContent='⏳ Translating…';
-  try{
+  out.style.display = 'block'; txt.textContent = '⏳ Translating…';
+  try {
     const res = await fetch('/api/ai/translate', {
       method:'POST',
       headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
       body: JSON.stringify({ text, targetLangs:[tgt] })
     });
     const data = await res.json();
-    txt.textContent = data.translations?.[tgt] || data.error || 'No result';
-    bumpUsage();
-    showImgEditor('trans','ocean sea marine');
-  }catch(e){ txt.textContent='❌ Error: '+e.message; }
-  btn.disabled=false; btn.innerHTML=prev;
+    const result = data.translations?.[tgt] || data.error || 'No result';
+    txt.textContent = result;
+    // زر نشر الترجمة
+    const pb = document.getElementById('transPubBtn');
+    if (pb) {
+      pb.style.display = 'inline-flex';
+      pb.onclick = () => showPublishPanel(`<p>${result}</p>`, text.slice(0,80));
+    }
+    bumpUsage(); showImgEditor('trans','ocean sea marine');
+  } catch(e) { txt.textContent = '❌ ' + e.message; }
+  btn.disabled = false; btn.innerHTML = prev;
 }
 
-// ══════ TOOL 4 — SUMMARIZE ══════
-async function summarizeContent(btn){
+// ══ TOOL 4 — SUMMARIZE ══
+async function summarizeContent(btn) {
   const text = document.getElementById('sumInput').value;
   const lang = document.getElementById('sumLang').value;
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Summarizing…';
-  const out = document.getElementById('sumOutput');
-  const txt = document.getElementById('sumOutputText');
-  out.style.display='block'; txt.textContent='⏳ Summarizing…';
-  try{
-    const res = await fetch('/api/ai/summarize', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({ text, lang })
-    });
-    const data = await res.json();
-    txt.textContent = data.summary || data.error || 'No result';
-    bumpUsage();
+  if (!text) { showToast('⚠️ Please enter content', 'error'); return; }
+  const summary = await callServer('/api/ai/summarize', { text, lang }, 'sumOutput','sumOutputText', btn).catch(()=>null);
+  if (summary) {
+    const pb = document.getElementById('sumPubBtn');
+    if (pb) { pb.style.display='inline-flex'; pb.onclick = ()=>showPublishPanel(`<p>${summary}</p>`, text.slice(0,80)); }
     showImgEditor('sum','ocean marine environment');
-  }catch(e){ txt.textContent='❌ Error: '+e.message; }
-  btn.disabled=false; btn.innerHTML=prev;
+  }
 }
 
-// ══════ TOOL 5 — TAGS ══════
-async function suggestTags(btn){
+// ══ TOOL 5 — TAGS ══
+async function suggestTags(btn) {
   const text = document.getElementById('tagInput').value;
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Analyzing…';
-  try{
+  if (!text) { showToast('⚠️ Please enter content', 'error'); return; }
+  btn.disabled = true; const prev = btn.innerHTML; btn.innerHTML = '⏳ Analyzing…';
+  try {
     const res = await fetch('/api/ai/chat', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({
-        message: `Suggest 4-6 tags for this marine content from: Marine Ecology, Pollution, Climate Change, Conservation, Research, Biodiversity, Tourism, Marine Life, Coral Reefs, Ocean Chemistry.
-Return ONLY comma-separated tags, nothing else.
-
-${text}`
-      })
+      method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}` },
+      body: JSON.stringify({ message:`Suggest 4-6 tags for this marine content from: Marine Ecology, Pollution, Climate Change, Conservation, Research, Biodiversity, Tourism, Marine Life, Coral Reefs, Ocean Chemistry.
+Return ONLY comma-separated tags:\n${text}` })
     });
     const data = await res.json();
     const tags = (data.reply||'').split(',').map(t=>t.trim()).filter(Boolean);
     const chips = document.getElementById('tagChips');
-    chips.style.display='block';
-    chips.innerHTML = tags.map(t=>`<span class="tag-chip">${t}</span>`).join('');
+    if (chips) { chips.style.display='block'; chips.innerHTML=tags.map(t=>`<span class="tag-chip">${t}</span>`).join(''); }
     document.getElementById('tagOutput').style.display='block';
-    document.getElementById('tagOutputText').textContent=tags.join(', ');
+    document.getElementById('tagOutputText').textContent = tags.join(', ');
     bumpUsage();
-  }catch(e){alert('Error: '+e.message);}
+  } catch(e) { showToast('❌ '+e.message,'error'); }
   btn.disabled=false; btn.innerHTML=prev;
 }
 
-// ══════ TOOL 6 — BREAKING ══════
-async function generateHeadlines(btn){
+// ══ TOOL 6 — BREAKING ══
+async function generateHeadlines(btn) {
   const desc = document.getElementById('breakInput').value;
   const lang = document.getElementById('breakLang').value;
+  if (!desc) { showToast('⚠️ Please describe the news event', 'error'); return; }
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
-  const out = document.getElementById('breakOutput');
-  const txt = document.getElementById('breakOutputText');
+  const out=document.getElementById('breakOutput'); const txt=document.getElementById('breakOutputText');
   out.style.display='block'; txt.textContent='⏳ Generating…';
-  try{
+  try {
     const res = await fetch('/api/ai/headlines', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
       body: JSON.stringify({ topic: desc })
     });
     const data = await res.json();
-    if(data.headlines){
-      txt.textContent = data.headlines.map(h=>h.text).join('\n');
-    } else {
-      txt.textContent = data.error || 'No result';
-    }
-    bumpUsage();
-    showImgEditor('break', desc.split(' ').slice(0,3).join(' '));
-  }catch(e){ txt.textContent='❌ Error: '+e.message; }
+    const lines = data.headlines ? data.headlines.map(h=>h.text).join('\n') : (data.error || 'No result');
+    txt.textContent = lines;
+    const pb = document.getElementById('breakPubBtn');
+    if (pb) { pb.style.display='inline-flex'; pb.onclick=()=>showPublishPanel(`<p>${lines.replace(/\n/g,'<br>')}</p>`, desc); }
+    bumpUsage(); showImgEditor('break', desc.split(' ').slice(0,3).join(' '));
+  } catch(e) { txt.textContent='❌ '+e.message; }
   btn.disabled=false; btn.innerHTML=prev;
 }
 
-// ══════ TOOL 7 — MODERATE ══════
-async function moderateComment(btn){
+// ══ TOOL 7 — MODERATE ══
+async function moderateComment(btn) {
   const text = document.getElementById('modInput').value;
+  if (!text) { showToast('⚠️ Please enter a comment', 'error'); return; }
   btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Analyzing…';
-  try{
+  try {
     const res = await fetch('/api/ai/chat', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({
-        message: `Moderate this comment for a marine news platform. Check: spam, hate speech, off-topic, misinformation.
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body: JSON.stringify({ message:`Moderate this comment for a marine news platform.
 First line MUST be exactly: VERDICT: APPROVE or VERDICT: REJECT or VERDICT: REVIEW_NEEDED
-Then 1-2 sentence reason.
-
-Comment: "${text}"`
-      })
+Then 1-2 sentence reason.\nComment: "${text}"` })
     });
     const data   = await res.json();
-    const result = data.reply || '';
+    const result = data.reply||'';
     const verdict= (result.match(/VERDICT:\s*(APPROVE|REJECT|REVIEW_NEEDED)/i)||[])[1]||'REVIEW_NEEDED';
-    const cls    = {APPROVE:'verdict-approve',REJECT:'verdict-reject',REVIEW_NEEDED:'verdict-review'};
-    const ico    = {APPROVE:'✅',REJECT:'❌',REVIEW_NEEDED:'⚠️'};
-    document.getElementById('modVerdict').style.display='block';
-    document.getElementById('modVerdict').innerHTML=`<span class="verdict-badge ${cls[verdict]}">${ico[verdict]} ${verdict.replace('_',' ')}</span>`;
+    const cls={APPROVE:'verdict-approve',REJECT:'verdict-reject',REVIEW_NEEDED:'verdict-review'};
+    const ico={APPROVE:'✅',REJECT:'❌',REVIEW_NEEDED:'⚠️'};
+    const vd=document.getElementById('modVerdict');
+    if(vd){vd.style.display='block';vd.innerHTML=`<span class="verdict-badge ${cls[verdict]}">${ico[verdict]} ${verdict.replace('_',' ')}</span>`;}
     document.getElementById('modOutput').style.display='block';
     document.getElementById('modOutputText').textContent=result;
     bumpUsage();
-  }catch(e){alert('Error: '+e.message);}
+  }catch(e){showToast('❌ '+e.message,'error');}
   btn.disabled=false; btn.innerHTML=prev;
 }
 
-// ══════ TOOL 8 — SEO ══════
-function optimizeSEO(btn){
-  const title    = document.getElementById('seoTitle').value;
-  const content  = document.getElementById('seoContent').value;
-  const lang     = document.getElementById('seoLang').value;
-  const audience = document.getElementById('seoAudience').value;
-  callServer('/api/ai/chat',
-    { message: `Generate SEO package in ${LANGS[lang]} for:
-Title: ${title}
-${content?'Content: '+content.substring(0,400):''}
-Audience: ${audience}
-
-Provide:
-1. SEO Title (≤60 chars)
-2. Meta Description (≤155 chars)
-3. URL Slug
-4. Focus Keyword
-5. 5 Secondary Keywords
-6. Open Graph Title
-7. Twitter Description` },
+// ══ TOOL 8 — SEO ══
+async function optimizeSEO(btn) {
+  const title   = document.getElementById('seoTitle').value;
+  const content = document.getElementById('seoContent').value;
+  const lang    = document.getElementById('seoLang').value;
+  const audience= document.getElementById('seoAudience').value;
+  if (!title) { showToast('⚠️ Please enter a title', 'error'); return; }
+  await callServer('/api/ai/chat',
+    { message:`Generate SEO package in ${LANGS[lang]} for:\nTitle: ${title}\n${content?'Content: '+content.slice(0,400):''}Audience: ${audience}\n\nProvide:\n1. SEO Title (≤60 chars)\n2. Meta Description (≤155 chars)\n3. URL Slug\n4. Focus Keyword\n5. 5 Secondary Keywords\n6. Open Graph Title\n7. Twitter Description` },
     'seoOutput','seoOutputText', btn
-  ).then(()=>{ showImgEditor('seo', title); });
+  ).catch(()=>{});
+  showImgEditor('seo', title);
 }
 
-// ══════ COPY ══════
-function copyEl(id){
-  const el = document.getElementById(id);
-  if(!el) return;
-  navigator.clipboard.writeText(el.textContent).then(()=>{
-    const orig = el.previousElementSibling;
-    if(orig && orig.classList.contains('copy-btn')){ orig.textContent='✅ Copied!'; setTimeout(()=>orig.textContent='📋 Copy',1500); }
-  });
-}
-
-
-
-// ══════ NEW TOOLS JS ══════
-
-// ── FACT CHECKER ──
+// ══ TOOL 9 — FACT CHECKER ══
 function checkFact(btn){
-  const claim = document.getElementById('factInput').value;
-  const src   = document.getElementById('factSource').value;
-  const lang  = document.getElementById('factLang').value;
-  const langs = {en:'English',fr:'French',ar:'Arabic'};
-  callServer('/api/ai/chat',{message:`You are a marine science fact-checker. Analyze this claim:
+  const claim=document.getElementById('factInput').value;
+  const src  =document.getElementById('factSource').value;
+  const lang =document.getElementById('factLang').value;
+  if(!claim){showToast('⚠️ Please enter a claim','error');return;}
+  callServer('/api/ai/chat',{message:`You are a marine science fact-checker. Analyze:
 "${claim}"
-${src?'Source context: '+src:''}
-Respond in ${langs[lang]} with:
+${src?'Source: '+src:''}
+Respond in ${LANGS[lang]}:
 VERDICT: [TRUE / PARTIALLY TRUE / UNVERIFIED / FALSE / MISLEADING]
-EXPLANATION: [2-3 sentences explaining why]
-SCIENTIFIC BASIS: [relevant data or studies]
+EXPLANATION: [2-3 sentences]
+SCIENTIFIC BASIS: [relevant data]
 CONFIDENCE: [High/Medium/Low]`},'factOutput','factOutputText',btn);
 }
 
-// ── NEWSLETTER ──
+// ══ TOOL 10 — NEWSLETTER ══
 function writeNewsletter(btn){
-  const topics = document.getElementById('nlTopics').value;
-  const tone   = document.getElementById('nlTone').value;
-  const lang   = document.getElementById('nlLang').value;
-  const langs  = {en:'English',fr:'French',ar:'Arabic'};
-  callServer('/api/ai/chat',{message:`Write a professional marine environment weekly newsletter in ${langs[lang]}.
+  const topics=document.getElementById('nlTopics').value;
+  const tone  =document.getElementById('nlTone').value;
+  const lang  =document.getElementById('nlLang').value;
+  if(!topics){showToast('⚠️ Please enter topics','error');return;}
+  callServer('/api/ai/chat',{message:`Write a professional marine environment weekly newsletter in ${LANGS[lang]}.
 Tone: ${tone}
-This week's topics:
-${topics}
-Include: Subject line, greeting, 3-4 short sections (one per topic), call-to-action, signature "Med Mosaic Team".
-Format with clear sections.`},'nlOutput','nlOutputText',btn);
+Topics:\n${topics}
+Include: Subject line, greeting, 3-4 sections, call-to-action, signature "Med Mosaic Team".`},'nlOutput','nlOutputText',btn)
+  .then(r=>{if(r){const pb=document.getElementById('nlPubBtn');if(pb){pb.style.display='inline-flex';pb.onclick=()=>showPublishPanel(`<p>${r}</p>`,topics.slice(0,60));}}}).catch(()=>{});
 }
 
-// ── SOCIAL MEDIA ──
+// ══ TOOL 11 — SOCIAL ══
 function generateSocial(btn){
-  const topic    = document.getElementById('socialTopic').value;
-  const context  = document.getElementById('socialContext').value;
-  const platform = document.getElementById('socialPlatform').value;
-  const lang     = document.getElementById('socialLang').value;
-  const langs    = {en:'English',fr:'French',ar:'Arabic'};
-  const platMap  = {
-    all: 'Twitter/X (max 280 chars), Facebook (engaging), LinkedIn (professional), Instagram (visual + hashtags)',
-    twitter:'Twitter/X (max 280 chars with hashtags)',
-    facebook:'Facebook post (engaging, 2-3 paragraphs)',
-    linkedin:'LinkedIn post (professional tone)',
-    instagram:'Instagram caption (visual storytelling + 10 hashtags)'
-  };
-  callServer('/api/ai/chat',{message:`Generate social media content in ${langs[lang]} for: "${topic}"
+  const topic   =document.getElementById('socialTopic').value;
+  const context =document.getElementById('socialContext').value;
+  const platform=document.getElementById('socialPlatform').value;
+  const lang    =document.getElementById('socialLang').value;
+  if(!topic){showToast('⚠️ Please enter a topic','error');return;}
+  const platMap={all:'Twitter/X (280 chars), Facebook (engaging), LinkedIn (professional), Instagram (visual+hashtags)',twitter:'Twitter/X (max 280 chars with hashtags)',facebook:'Facebook post',linkedin:'LinkedIn (professional)',instagram:'Instagram caption + 10 hashtags'};
+  callServer('/api/ai/chat',{message:`Generate social media content in ${LANGS[lang]} for: "${topic}"
 ${context?'Context: '+context:''}
-Create posts for: ${platMap[platform]}
-Include relevant marine/eco hashtags. Make each post engaging and shareable.
-Label each platform clearly.`},'socialOutput','socialOutputText',btn);
+Platforms: ${platMap[platform]||platMap.all}
+Include relevant marine/eco hashtags. Label each platform clearly.`},'socialOutput','socialOutputText',btn);
 }
 
-// ── Q&A ──
+// ══ TOOL 12 — Q&A ══
 function generateQA(btn){
-  const input    = document.getElementById('qaInput').value;
-  const count    = document.getElementById('qaCount').value;
-  const audience = document.getElementById('qaAudience').value;
-  const lang     = document.getElementById('qaLang').value;
-  const langs    = {en:'English',fr:'French',ar:'Arabic'};
-  callServer('/api/ai/chat',{message:`Generate ${count} FAQ questions and detailed answers in ${langs[lang]} about:
+  const input   =document.getElementById('qaInput').value;
+  const count   =document.getElementById('qaCount').value;
+  const audience=document.getElementById('qaAudience').value;
+  const lang    =document.getElementById('qaLang').value;
+  if(!input){showToast('⚠️ Please enter content','error');return;}
+  callServer('/api/ai/chat',{message:`Generate ${count} FAQ Q&A in ${LANGS[lang]}:
 ${input}
-Target audience: ${audience}
-Format each as:
-Q: [question]
-A: [detailed answer, 2-3 sentences]
-Make questions progressively deeper. Focus on marine environment aspects.`},'qaOutput','qaOutputText',btn);
+Audience: ${audience}
+Format: Q: [question]\nA: [2-3 sentence answer]\nMake questions progressively deeper.`},'qaOutput','qaOutputText',btn);
 }
 
-// ── ECO REPORT ──
+// ══ TOOL 13 — ECO REPORT ══
 function buildReport(btn){
-  const topic    = document.getElementById('reportTopic').value;
-  const scope    = document.getElementById('reportScope').value;
-  const type     = document.getElementById('reportType').value;
-  const sections = document.getElementById('reportSections').value;
-  const lang     = document.getElementById('reportLang').value;
-  const langs    = {en:'English',fr:'French',ar:'Arabic'};
-  const sectMap  = {
-    full: 'Executive Summary, Current Situation, Key Data & Statistics, Environmental Impact, Root Causes, Consequences, Recommendations, Conclusion',
-    summary: 'Executive Summary with key findings and 3 main recommendations',
-    data: 'Data Section with statistics, measurements, trends and scientific figures'
-  };
-  callServer('/api/ai/chat',{message:`Write a structured ${type} report in ${langs[lang]} about:
+  const topic   =document.getElementById('reportTopic').value;
+  const scope   =document.getElementById('reportScope').value;
+  const type    =document.getElementById('reportType').value;
+  const sections=document.getElementById('reportSections').value;
+  const lang    =document.getElementById('reportLang').value;
+  if(!topic){showToast('⚠️ Please enter a topic','error');return;}
+  const sectMap={full:'Executive Summary, Situation, Data & Statistics, Impact, Causes, Consequences, Recommendations, Conclusion',summary:'Executive Summary with 3 main recommendations',data:'Data Section with statistics, trends and scientific figures'};
+  callServer('/api/ai/chat',{message:`Write a ${type} report in ${LANGS[lang]}:
 Topic: ${topic}
-Geographic scope: ${scope||'Morocco / Mediterranean'}
-Include these sections: ${sectMap[sections]}
-Use professional report format with section headers. Include realistic data estimates where appropriate.`},'reportOutput','reportOutputText',btn);
+Scope: ${scope||'Morocco / Mediterranean'}
+Sections: ${sectMap[sections]||sectMap.full}
+Use professional format with section headers.`},'reportOutput','reportOutputText',btn)
+  .then(r=>{if(r&&r.length>100){const pb=document.getElementById('reportPubBtn');if(pb){pb.style.display='inline-flex';pb.onclick=()=>showPublishPanel(`<p>${r}</p>`,topic);}}}).catch(()=>{});
 }
 
-// ── IMAGE CAPTION ──
+// ══ TOOL 14 — IMAGE CAPTION ══
 function generateCaption(btn){
-  const desc    = document.getElementById('captionInput').value;
-  const ctx     = document.getElementById('captionContext').value;
-  const style   = document.getElementById('captionStyle').value;
-  const lang    = document.getElementById('captionLang').value;
-  let prompt = '';
-  if(lang==='all'){
-    prompt = `Generate captions in Arabic, French AND English for this marine image:
-Description: ${desc}
-${ctx?'Article context: '+ctx:''}
-Style: ${style}
-For each language provide:
-- Caption (1-2 sentences)
-- Alt text (SEO-friendly, under 125 chars)
-Label each language clearly.`;
-  } else {
-    const langs={en:'English',fr:'French',ar:'Arabic'};
-    prompt = `Generate a ${style} caption in ${langs[lang]} for this marine image:
-Description: ${desc}
-${ctx?'Article context: '+ctx:''}
-Provide:
-CAPTION: [1-2 sentences]
-ALT TEXT: [SEO-friendly description under 125 chars]`;
-  }
+  const desc   =document.getElementById('captionInput').value;
+  const ctx    =document.getElementById('captionContext').value;
+  const style  =document.getElementById('captionStyle').value;
+  const lang   =document.getElementById('captionLang').value;
+  if(!desc){showToast('⚠️ Please describe the image','error');return;}
+  const prompt=lang==='all'
+    ?`Generate captions in Arabic, French AND English:\nImage: ${desc}\n${ctx?'Context: '+ctx:''}\nStyle: ${style}\nFor each: CAPTION + ALT TEXT (under 125 chars). Label each language.`
+    :`Generate a ${style} caption in ${LANGS[lang]}:\nImage: ${desc}\n${ctx?'Context: '+ctx:''}\nProvide:\nCAPTION: [1-2 sentences]\nALT TEXT: [under 125 chars]`;
   callServer('/api/ai/chat',{message:prompt},'captionOutput','captionOutputText',btn);
 }
 
-// ── ARTICLE REWRITER ──
+// ══ TOOL 15 — REWRITER ══
 function rewriteArticle(btn){
-  const input = document.getElementById('rewriteInput').value;
-  const mode  = document.getElementById('rewriteMode').value;
-  const lang  = document.getElementById('rewriteLang').value;
-  const langs = {en:'English',fr:'French',ar:'Arabic'};
-  const modeMap = {
-    improve: 'Improve the quality, clarity and flow while keeping the same length and information',
-    simplify: 'Simplify the language so it is accessible to a general audience (B2 level)',
-    formalize: 'Make the tone more formal and professional for academic/official use',
-    shorten: 'Condense to approximately 50% of the original length keeping the key facts',
-    expand: 'Expand with additional context, data, and background information (increase by ~50%)',
-    journalistic: 'Rewrite in proper journalistic style: inverted pyramid, short paragraphs, active voice'
-  };
-  callServer('/api/ai/chat',{message:`Rewrite the following marine environment article in ${langs[lang]}.
-Mode: ${modeMap[mode]}
-Return ONLY the rewritten article, no preamble.
-
-ORIGINAL ARTICLE:
-${input}`},'rewriteOutput','rewriteOutputText',btn);
+  const input=document.getElementById('rewriteInput').value;
+  const mode =document.getElementById('rewriteMode').value;
+  const lang =document.getElementById('rewriteLang').value;
+  if(!input){showToast('⚠️ Please paste an article','error');return;}
+  const modeMap={improve:'Improve quality and clarity keeping same length',simplify:'Simplify for general audience (B2 level)',formalize:'Make more formal and professional',shorten:'Condense to 50% keeping key facts',expand:'Expand with context and data (+50%)',journalistic:'Rewrite in journalistic style: inverted pyramid, short paragraphs, active voice'};
+  callServer('/api/ai/chat',{message:`Rewrite in ${LANGS[lang]}. Mode: ${modeMap[mode]||mode}
+Return ONLY the rewritten article.\n\n${input}`},'rewriteOutput','rewriteOutputText',btn)
+  .then(r=>{if(r&&r.length>100){const pb=document.getElementById('rewritePubBtn');if(pb){pb.style.display='inline-flex';pb.onclick=()=>showPublishPanel(r.includes('<p>')?r:`<p>${r}</p>`,input.slice(0,80));}}}).catch(()=>{});
 }
 
-// ── INTERVIEW QUESTIONS ──
+// ══ TOOL 16 — INTERVIEW ══
 function generateInterview(btn){
-  const expert = document.getElementById('interviewExpert').value;
-  const topic  = document.getElementById('interviewTopic').value;
-  const type   = document.getElementById('interviewType').value;
-  const count  = document.getElementById('interviewCount').value;
-  const lang   = document.getElementById('interviewLang').value;
-  const langs  = {en:'English',fr:'French',ar:'Arabic'};
-  callServer('/api/ai/chat',{message:`Generate ${count} ${type} interview questions in ${langs[lang]}.
-Interviewee: ${expert}
+  const expert=document.getElementById('interviewExpert').value;
+  const topic =document.getElementById('interviewTopic').value;
+  const type  =document.getElementById('interviewType').value;
+  const count =document.getElementById('interviewCount').value;
+  const lang  =document.getElementById('interviewLang').value;
+  if(!topic){showToast('⚠️ Please enter a topic','error');return;}
+  callServer('/api/ai/chat',{message:`Generate ${count} ${type} interview questions in ${LANGS[lang]}.
+Interviewee: ${expert||'marine expert'}
 Topic: ${topic}
-Questions should be open-ended, progressively deeper, and draw out expert insights.
-Include 2 follow-up probes after key questions.
-Number each question. Make them specific to marine environment journalism.`},'interviewOutput','interviewOutputText',btn);
+Make them open-ended, progressively deeper. Include 2 follow-up probes.`},'interviewOutput','interviewOutputText',btn);
 }
 
-// ── ECO ALERT ──
-function generateAlert(btn){
-  const situation = document.getElementById('alertInput').value;
-  const type      = document.getElementById('alertType').value;
-  const severity  = document.getElementById('alertSeverity').value;
-  const authority = document.getElementById('alertAuthority').value;
-  const lang      = document.getElementById('alertLang').value;
-  const langs     = {en:'English',fr:'French',ar:'Arabic'};
-  callServer('/api/ai/chat',{message:`Write a ${type} in ${langs[lang]} for this environmental situation:
-${situation}
+// ══ TOOL 17 — ECO ALERT ══
+async function generateAlert(btn){
+  const situation=document.getElementById('alertInput').value;
+  const type     =document.getElementById('alertType').value;
+  const severity =document.getElementById('alertSeverity').value;
+  const authority=document.getElementById('alertAuthority').value;
+  const lang     =document.getElementById('alertLang').value;
+  if(!situation){showToast('⚠️ Please describe the situation','error');return;}
+  const text=await callServer('/api/ai/chat',{message:`Write a ${type} in ${LANGS[lang]}:
+Situation: ${situation}
 Severity: ${severity}
 ${authority?'Issuing authority: '+authority:''}
-Include: Alert header with severity emoji, situation summary, immediate risks, affected areas, recommended actions, contact/reporting info.
-Use official, urgent tone appropriate for public communication.`},'alertOutput','alertOutputText',btn);
-}
-
-async function generateAlertAndPublish(btn){
-  const situation = document.getElementById('alertInput').value;
-  if(!situation){alert('Please describe the environmental situation');return;}
-  const type     = document.getElementById('alertType').value;
-  const severity = document.getElementById('alertSeverity').value;
-  const lang     = document.getElementById('alertLang').value;
-  const langs    = {en:'English',fr:'French',ar:'Arabic'};
-  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
-  try{
-    const res = await fetch('/api/ai/generate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body:JSON.stringify({topic:`${type}: ${situation}`,lang,tone:'alert'})
-    });
-    const data = await res.json();
-    if(data.error) throw new Error(data.error);
-    const content = data.content;
-    const plain   = content.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-    const sevEmoji= {critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
-    const title   = `${sevEmoji[severity]||'🔴'} ${type.replace(/[🚨⚠️📢📣🔴]/g,'').trim()}: ${situation.slice(0,80)}`;
-    const r2 = await fetch('/api/articles',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body:JSON.stringify({title,content,excerpt:plain.slice(0,250),tag:'Alert',emoji:sevEmoji[severity]||'🚨',lang,status:'published'})
-    });
-    const d2 = await r2.json();
-    if(!r2.ok) throw new Error(d2.error);
-    document.getElementById('alertOutputText').innerHTML = content;
-    document.getElementById('alertOutput').style.display='block';
-    alert('✅ Alert published! ID: #'+d2.id);
-    bumpUsage();
-  }catch(e){alert('Error: '+e.message);}
-  btn.disabled=false; btn.innerHTML=prev;
-}
-
-// ══════ PUBLISH FUNCTIONS ══════
-
-// متغير لحفظ المحتوى المولّد
-let _generatedContent = '';
-let _generatedTopic   = '';
-
-// بعد توليد المقال — نفعّل publish panel
-const _origGenArticle = generateArticle;
-function generateArticle(btn) {
-  _generatedTopic = document.getElementById('genTopic').value;
-  const orig = callServer;
-  // override مؤقت لالتقاط النتيجة
-  window._lastGenContent = null;
-  _origGenArticle(btn);
-  // نفعّل الـ panel بعد التوليد عبر MutationObserver
-  const txt = document.getElementById('genOutputText');
-  const obs = new MutationObserver(() => {
-    if (txt.textContent.length > 50) {
-      _generatedContent = txt.textContent;
-      showPublishPanel();
-      obs.disconnect();
-    }
-  });
-  obs.observe(txt, { childList: true, subtree: true, characterData: true });
-}
-
-function showPublishPanel() {
-  const panel = document.getElementById('publishPanel');
-  panel.classList.add('visible');
-  // توليد عنوان تلقائي من أول سطر
-  const lines = _generatedContent.split('\n').filter(l => l.trim());
-  const firstLine = lines[0]?.replace(/<[^>]+>/g, '').replace(/^#+\s*/, '').trim() || _generatedTopic;
-  document.getElementById('pubTitle').value = firstLine.slice(0, 200);
-  // excerpt من الجملتين الأوليين
-  const plainText = _generatedContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  document.getElementById('pubExcerpt').value = plainText.slice(0, 280);
-  // scroll للـ panel
-  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  document.getElementById('pubStatus').className = 'publish-status';
-  document.getElementById('pubStatus').textContent = '';
-}
-
-async function publishArticle(forceStatus) {
-  const title   = document.getElementById('pubTitle').value.trim();
-  const excerpt = document.getElementById('pubExcerpt').value.trim();
-  const status  = forceStatus || document.getElementById('pubStatus')?.value || 'published';
-  const tag     = document.getElementById('genCategory').value;
-  const lang    = document.getElementById('genLang').value;
-  const emoji   = '🌊';
-
-  if (!title) { alert('Please enter a title'); return; }
-  if (!_generatedContent) { alert('No content to publish'); return; }
-
-  const btn = document.getElementById('pubBtn');
-  btn.disabled = true; btn.textContent = '⏳ Publishing…';
-
-  const statusEl = document.getElementById('pubStatus');
-  statusEl.className = 'publish-status';
-
-  try {
-    const res = await fetch('/api/articles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({ title, content: _generatedContent, excerpt, tag, emoji, lang, status })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Server error');
-
-    statusEl.className = 'publish-status success';
-    statusEl.textContent = status === 'published'
-      ? `✅ Article published! ID: #${data.id} — visible on the site now.`
-      : `💾 Saved as ${status}. ID: #${data.id}`;
-    btn.textContent = '✅ Published!';
-    bumpUsage();
-
-    // رابط المقال
-    if (status === 'published') {
-      setTimeout(() => {
-        statusEl.innerHTML += ` <a href="/article.html?id=${data.id}" target="_blank" style="color:var(--cyan);font-weight:700">→ View Article</a>`;
-      }, 500);
-    }
-  } catch(e) {
-    statusEl.className = 'publish-status error';
-    statusEl.textContent = '❌ Error: ' + e.message;
-    btn.textContent = '🚀 Publish to Site';
+Include: Alert header, situation summary, immediate risks, affected areas, recommended actions, contact info.`},'alertOutput','alertOutputText',btn).catch(()=>null);
+  if(text){
+    const pb=document.getElementById('alertPubBtn');
+    if(pb){pb.style.display='inline-flex';pb.onclick=()=>publishAlertNow(situation,text,severity,lang);}
   }
-  btn.disabled = false;
 }
 
-// ══ GENERATE & PUBLISH (modal) ══
+async function publishAlertNow(situation, content, severity, lang) {
+  const sevEmoji={critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
+  const title = `${sevEmoji[severity]||'🔴'} Alert: ${situation.slice(0,100)}`;
+  try {
+    const res = await fetch('/api/articles',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body:JSON.stringify({title,content:`<p>${content}</p>`,excerpt:content.slice(0,250),tag:'Alert',emoji:sevEmoji[severity]||'🚨',lang,status:'published'})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error);
+    showToast(`✅ Alert published! #${data.id}`,'success');
+    bumpUsage();
+  }catch(e){showToast('❌ '+e.message,'error');}
+}
+
+// ══ GENERATE & PUBLISH MODAL ══
 function generateAndPublish(btn) {
   document.getElementById('qpOverlay').classList.add('open');
   document.getElementById('qpTopic').focus();
@@ -1587,8 +1595,8 @@ function closeQP() {
   document.getElementById('qpOverlay').classList.remove('open');
   document.getElementById('qpProgress').style.display = 'none';
   document.getElementById('qpBar').style.width = '0%';
-  const btn = document.getElementById('qpBtn');
-  btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
+  const qpBtn = document.getElementById('qpBtn');
+  if (qpBtn) { qpBtn.disabled = false; qpBtn.textContent = '⚡ Generate & Publish'; }
 }
 
 async function runGenerateAndPublish() {
@@ -1598,143 +1606,58 @@ async function runGenerateAndPublish() {
   const lang     = document.getElementById('qpLang').value;
   const context  = document.getElementById('qpContext').value.trim();
   const status   = document.getElementById('qpStatus').value;
+  if (!topic) { document.getElementById('qpTopic').focus(); showToast('⚠️ Please enter a topic','error'); return; }
 
-  if (!topic) { document.getElementById('qpTopic').focus(); return; }
-
-  const btn = document.getElementById('qpBtn');
-  btn.disabled = true; btn.textContent = '⏳ Working…';
-
+  const qpBtn = document.getElementById('qpBtn');
+  qpBtn.disabled = true; qpBtn.textContent = '⏳ Working…';
   const progress = document.getElementById('qpProgress');
   const bar      = document.getElementById('qpBar');
   const pText    = document.getElementById('qpProgressText');
   progress.style.display = 'block';
 
-  // Step 1 — توليد المقال
-  pText.textContent = '🤖 Generating article with AI…'; bar.style.width = '20%';
-  let content = '';
   try {
-    const res = await fetch('/api/ai/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({ topic: topic + (context ? ' — ' + context : '') + ' (' + category + ')', lang, tone })
+    // Step 1 — توليد
+    pText.textContent = '🤖 Generating article with AI…'; bar.style.width = '25%';
+    const res1 = await fetch('/api/ai/generate', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body: JSON.stringify({ topic: topic+(context?'—'+context:'')+'('+category+')', lang, tone })
     });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
-    content = data.content;
-    bar.style.width = '55%';
-  } catch(e) {
-    pText.textContent = '❌ Generation failed: ' + e.message;
-    btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
-    return;
-  }
+    const d1 = await res1.json();
+    if (d1.error) throw new Error(d1.error);
+    const content = d1.content;
+    bar.style.width = '60%';
 
-  // Step 2 — توليد excerpt تلقائي
-  pText.textContent = '✍️ Extracting summary…'; bar.style.width = '70%';
-  const plainText = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-  const excerpt   = plainText.slice(0, 280);
+    // Step 2 — نشر
+    pText.textContent = '🚀 Publishing to database…'; bar.style.width = '85%';
+    const plain    = content.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    const h1Match  = content.match(/<h[12][^>]*>(.*?)<\/h[12]>/i);
+    const autoTitle= (h1Match?.[1]||plain).replace(/<[^>]+>/g,'').trim().slice(0,200)||topic;
 
-  // Step 3 — استخراج العنوان
-  const titleMatch = content.match(/<h[12][^>]*>(.*?)<\/h[12]>/i);
-  const autoTitle  = (titleMatch?.[1] || plainText.slice(0, 120)).replace(/<[^>]+>/g, '').trim();
-
-  // Step 4 — نشر في DB
-  pText.textContent = '🚀 Publishing to database…'; bar.style.width = '88%';
-  try {
-    const res = await fetch('/api/articles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify({
-        title: autoTitle,
-        content,
-        excerpt,
-        tag: category,
-        emoji: '🌊',
-        lang,
-        status
-      })
+    const res2 = await fetch('/api/articles', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body: JSON.stringify({ title:autoTitle, content, excerpt:plain.slice(0,280),
+                             tag:category, emoji:'🌊', lang, status })
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Publish failed');
+    const d2 = await res2.json();
+    if (!res2.ok) throw new Error(d2.error||'Publish failed');
 
     bar.style.width = '100%';
-    pText.innerHTML = status === 'published'
-      ? `✅ Article published! <a href="/article.html?id=${data.id}" target="_blank" style="color:#2dc653;font-weight:700">→ View on Site</a>`
-      : `💾 Saved as ${status} (ID: #${data.id})`;
-
+    pText.innerHTML = status==='published'
+      ? `✅ Published! <a href="/article.html?id=${d2.id}" target="_blank" style="color:#2dc653;font-weight:700">→ View Article #${d2.id}</a>`
+      : `💾 Saved as ${status} — ID: #${d2.id}`;
     bumpUsage();
-    setTimeout(closeQP, 3000);
+    setTimeout(closeQP, 3500);
   } catch(e) {
-    pText.textContent = '❌ Publish failed: ' + e.message;
+    pText.textContent = '❌ ' + e.message;
   }
-  btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
+  qpBtn.disabled = false; qpBtn.textContent = '⚡ Generate & Publish';
+}
+
+// ══ COPY ══
+function copyEl(id) {
+  const el = document.getElementById(id); if (!el) return;
+  const text = el.textContent || el.innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('📋 Copied!'));
 }
 
 </script>
-<!-- ══ QUICK PUBLISH MODAL ══ -->
-<div class="qp-overlay" id="qpOverlay" onclick="if(event.target===this)closeQP()">
-  <div class="qp-modal">
-    <div class="qp-header">
-      <div class="qp-title">⚡ Generate &amp; Publish Article</div>
-      <button class="qp-close" onclick="closeQP()">×</button>
-    </div>
-    <div class="qp-body">
-      <div>
-        <label class="qp-label">Environmental Problem / Topic <span style="color:#e73946">*</span></label>
-        <input class="qp-input" id="qpTopic" placeholder="e.g. Microplastics in Agadir bay, coral bleaching, sea level rise…">
-      </div>
-      <div>
-        <label class="qp-label">Analysis Depth</label>
-        <select class="qp-select" id="qpTone">
-          <option value="investigative">🔍 Investigative Analysis</option>
-          <option value="scientific">🔬 Scientific Report</option>
-          <option value="alert" selected>🚨 Environmental Alert</option>
-          <option value="solution">💡 Solution-Focused</option>
-          <option value="informative">📰 News Report</option>
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <label class="qp-label">Category</label>
-          <select class="qp-select" id="qpCategory">
-            <option>Pollution</option><option>Climate</option><option>Marine Ecology</option>
-            <option>Conservation</option><option>Research</option><option>Biodiversity</option>
-          </select>
-        </div>
-        <div>
-          <label class="qp-label">Language</label>
-          <select class="qp-select" id="qpLang">
-            <option value="ar">🇲🇦 العربية</option>
-            <option value="fr">🇫🇷 Français</option>
-            <option value="en" selected>🇬🇧 English</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <label class="qp-label">Additional Context <span style="color:var(--muted);font-weight:400">(optional)</span></label>
-        <textarea class="qp-textarea" id="qpContext" placeholder="Specific location, data, sources, recent events…"></textarea>
-      </div>
-      <div>
-        <label class="qp-label">Publish Status</label>
-        <select class="qp-select" id="qpStatus">
-          <option value="published">✅ Publish Immediately</option>
-          <option value="pending">⏳ Send for Review</option>
-          <option value="draft">📝 Save as Draft</option>
-        </select>
-      </div>
-    </div>
-    <div class="qp-footer">
-      <button class="qp-cancel" onclick="closeQP()">Cancel</button>
-      <button class="btn-publish" id="qpBtn" onclick="runGenerateAndPublish()">⚡ Generate &amp; Publish</button>
-    </div>
-    <!-- progress -->
-    <div id="qpProgress" style="display:none;padding:16px 24px;border-top:1px solid rgba(0,201,200,.08)">
-      <div style="font-size:13px;color:var(--cyan);margin-bottom:8px" id="qpProgressText">⏳ Generating article…</div>
-      <div style="height:4px;background:rgba(0,201,200,.1);border-radius:2px;overflow:hidden">
-        <div id="qpBar" style="height:100%;background:var(--cyan);width:0%;transition:width .4s;border-radius:2px"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
