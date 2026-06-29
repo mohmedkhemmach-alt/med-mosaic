@@ -187,7 +187,7 @@ window.addEventListener("DOMContentLoaded",function(){
 <main class="main">
   <div class="topbar">
     <div class="topbar-title">🤖 AI Services Hub</div>
-    <div class="api-badge"><div class="api-dot"></div> Groq · Llama 3.3-70B Connected</div>
+    <div class="api-badge" id="groqBadge"><div class="api-dot"></div> Groq · Llama 3.3-70B Connected</div>
   </div>
   <div class="content">
 
@@ -1014,6 +1014,37 @@ window.addEventListener("DOMContentLoaded",function(){
 
 // ── AUTH ──
 const TOKEN = localStorage.getItem('adminToken') || '';
+
+// Test API connection on load
+window.addEventListener('DOMContentLoaded', function() {
+  const badge = document.getElementById('groqBadge');
+  fetch('/api/ai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'ping' })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (badge) {
+      if (d.reply || d.content) {
+        badge.textContent = '● Groq · Llama 3.3-70B Connected';
+        badge.style.background = 'rgba(0,201,100,0.2)';
+        badge.style.color = '#00c964';
+      } else {
+        badge.textContent = '⚠ API Error: ' + (d.error || 'Unknown');
+        badge.style.background = 'rgba(255,80,80,0.2)';
+        badge.style.color = '#ff5050';
+      }
+    }
+  })
+  .catch(e => {
+    if (badge) {
+      badge.textContent = '✕ Cannot reach server: ' + e.message;
+      badge.style.background = 'rgba(255,80,80,0.2)';
+      badge.style.color = '#ff5050';
+    }
+  });
+});
 // لا نجبر تسجيل الدخول للـ AI tools — فقط للنشر
 
 const LANGS = { en:'English', fr:'French', ar:'Arabic' };
@@ -1155,7 +1186,8 @@ async function callServer(endpoint, body, outputId, textId, btn) {
     if (data.error) throw new Error(data.error);
     const text = data.content || data.summary || data.reply || JSON.stringify(data);
     if (txt) {
-      if (endpoint.includes('/generate') || /<[ph][0-9>]/.test(text)) {
+      // Show as HTML if contains HTML tags
+      if (/<[h2-6p][^>]*>/.test(text) || /<strong|<em|<br/.test(text)) {
         txt.innerHTML = text;
       } else {
         txt.textContent = text;
@@ -1165,6 +1197,7 @@ async function callServer(endpoint, body, outputId, textId, btn) {
     return text;
   } catch(e) {
     if (txt) txt.textContent = '❌ Error: ' + e.message;
+    console.error('callServer error:', endpoint, e);
     throw e;
   } finally {
     if (btn) { btn.disabled = false; btn.innerHTML = btn._prev || btn.innerHTML; }
