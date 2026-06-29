@@ -488,202 +488,254 @@
   <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
   <script>
-    // ── SEEDS للصور الاحتياطية ──
-    const SEEDS = ['reef','ocean','sea','beach','wave','nature','earth','plastic','dolphin','coral'];
-    function imgSrc(a) {
-      if (a.cover_image) return a.cover_image;
-      return `https://picsum.photos/seed/${SEEDS[a.id % SEEDS.length]}/1000/500`;
+  // ══════════════════════════════════════
+  // ARTICLE PAGE — Dynamic from DB
+  // ══════════════════════════════════════
+
+  const SEEDS = ['reef','ocean','sea','beach','wave','nature','earth','plastic','dolphin','coral','fish','marine'];
+
+  function imgSrc(a) {
+    if (a.cover_image) return a.cover_image;
+    return `https://picsum.photos/seed/${SEEDS[a.id % SEEDS.length]}/1000/500`;
+  }
+
+  let currentArticle = null;
+  let currentLang    = 'en';
+  let allArticles    = [];
+
+  // ── تحميل المقال من API ──
+  async function loadArticle() {
+    const params = new URLSearchParams(window.location.search);
+    const id     = parseInt(params.get('id'));
+    if (!id) { showError('No article specified.'); return; }
+
+    try {
+      // جلب المقال
+      const res = await fetch(`/api/articles/${id}`);
+      if (!res.ok) { showError('Article not found.'); return; }
+      currentArticle = await res.json();
+
+      // جلب باقي المقالات للـ Related
+      const res2   = await fetch('/api/articles?limit=20&page=1');
+      const data2  = await res2.json();
+      allArticles  = data2.articles || [];
+
+      renderArticle();
+      renderRelated(id);
+      loadComments(id);
+
+      // زيادة المشاهدات
+      fetch(`/api/articles/${id}/view`, { method: 'POST' }).catch(() => {});
+
+    } catch(e) {
+      showError('Could not load article: ' + e.message);
     }
+  }
 
-    let currentArticle = null;
-    let currentLang = 'en';
-    let allArticles  = []; // للـ related
+  function showError(msg) {
+    const t = document.getElementById('article-title');
+    if (t) t.textContent = msg;
+  }
 
-    // ── تحميل المقال من API ──
-    async function loadArticle() {
-      const params = new URLSearchParams(window.location.search);
-      const id     = parseInt(params.get('id'));
+  // ── رسم المقال ──
+  function renderArticle() {
+    const a = currentArticle;
+    if (!a) return;
 
-      if (!id) {
-        showError('No article ID specified.');
-        return;
-      }
+    // Hero info
+    const emojiEl = document.getElementById('article-emoji');
+    const tagEl   = document.getElementById('article-tag');
+    const authEl  = document.getElementById('article-author');
+    const dateEl  = document.getElementById('article-date');
+    const viewsEl = document.getElementById('article-views');
+    const breadEl = document.getElementById('breadcrumb-title');
 
-      try {
-        // جلب المقال الحالي
-        const res = await fetch(`/api/articles/${id}`);
-        if (!res.ok) { showError('Article not found.'); return; }
-        currentArticle = await res.json();
+    if (emojiEl)  emojiEl.textContent  = a.emoji || '📰';
+    if (tagEl)    tagEl.textContent    = a.tag   || '';
+    if (authEl)   authEl.textContent   = a.author || 'Med Mosaic';
+    if (dateEl)   dateEl.textContent   = a.created_at
+      ? new Date(a.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
+      : '';
+    if (viewsEl)  viewsEl.textContent  = ((a.views || 0) + 1).toLocaleString();
+    if (breadEl)  breadEl.textContent  = a.title;
+    document.title = a.title + ' — Med Mosaic';
 
-        // جلب كل المقالات للـ related
-        const resAll = await fetch('/api/articles?limit=20&page=1');
-        const dataAll = await resAll.json();
-        allArticles = dataAll.articles || [];
-
-        renderArticle();
-        renderRelated(id);
-        loadCommentsFromDB(id);
-
-      } catch(e) {
-        console.error('Load error:', e);
-        showError('Could not load article.');
-      }
-    }
-
-    function showError(msg) {
-      document.getElementById('article-title').textContent = msg;
-    }
-
-    function renderArticle() {
-      const a = currentArticle;
-
-      // Hero
-      document.getElementById('article-emoji').textContent  = a.emoji || '📰';
-      document.getElementById('article-tag').textContent    = a.tag   || '';
-      document.getElementById('article-author').textContent = a.author || 'Med Mosaic';
-      document.getElementById('article-date').textContent   = a.created_at
-        ? new Date(a.created_at).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})
-        : '';
-      document.getElementById('article-views').textContent  = (a.views || 0).toLocaleString();
-      document.getElementById('breadcrumb-title').textContent = a.title;
-      document.title = a.title + ' — Med Mosaic';
-
-      // Cover image
-      const coverImg = document.getElementById('article-cover-img');
+    // صورة الغلاف
+    const coverImg = document.getElementById('article-cover-img');
+    if (coverImg) {
       coverImg.src = imgSrc(a);
       coverImg.alt = a.title;
-
-      renderArticleContent(currentLang);
-    }
-
-    function renderArticleContent(lang) {
-      if (!currentArticle) return;
-      const a = currentArticle;
-
-      // العنوان — استخدم الحقل المناسب حسب اللغة إن وُجد
-      const titleField = lang === 'fr' ? (a.title_fr || a.title)
-                       : lang === 'ar' ? (a.title_ar || a.title)
-                       : a.title;
-      document.getElementById('article-title').textContent = titleField;
-
-      // المحتوى — استخدم الحقل المناسب حسب اللغة إن وُجد
-      const contentField = lang === 'fr' ? (a.content_fr || a.content)
-                         : lang === 'ar' ? (a.content_ar || a.content)
-                         : a.content;
-
-      const articleEl = document.getElementById('article-content');
-      articleEl.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
-      articleEl.innerHTML = contentField || '<p>Content coming soon.</p>';
-
-      // اللغة على الـ lang-tabs
-      document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
-      const activeTab = document.querySelector(`.lang-tab[onclick*="'${lang}'"]`);
-      if (activeTab) activeTab.classList.add('active');
-    }
-
-    function switchArticleLang(lang, btn) {
-      currentLang = lang;
-      document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderArticleContent(lang);
-    }
-
-    function renderRelated(currentId) {
-      const related = allArticles.filter(a => a.id !== currentId).slice(0, 3);
-      document.getElementById('related-articles').innerHTML = related.length
-        ? related.map(a => `
-            <div class="related-card" onclick="location.href='article.html?id=${a.id}'">
-              <div class="related-thumb">
-                <img src="${imgSrc(a)}" alt="${a.title}" loading="lazy"/>
-              </div>
-              <div>
-                <h4>${a.title}</h4>
-                <p>📅 ${a.created_at ? new Date(a.created_at).toLocaleDateString('en-GB') : ''}</p>
-              </div>
-            </div>
-          `).join('')
-        : '<p style="color:var(--muted);font-size:.85rem">No related articles yet.</p>';
-    }
-
-    // ── التعليقات ──
-    let localComments = [];
-
-    function renderComments(list) {
-      document.getElementById('comments-preview').innerHTML = (list || localComments).map(c => `
-        <div class="mini-comment">
-          <div class="mini-comment-header">
-            <div class="mini-avatar">${c.avatar || '👤'}</div>
-            <div>
-              <h5>${c.name || c.user_name || 'Anonymous'}</h5>
-              <span class="mini-date">${c.date || (c.created_at ? new Date(c.created_at).toLocaleDateString() : '')}</span>
-            </div>
-          </div>
-          <p>${c.text}</p>
-        </div>
-      `).join('') || '<p style="color:var(--muted);font-size:.85rem">No comments yet.</p>';
-    }
-
-    async function loadCommentsFromDB(articleId) {
-      try {
-        const res = await fetch(`/api/comments?articleId=${articleId}`);
-        const dbComments = await res.json();
-        if (Array.isArray(dbComments) && dbComments.length > 0) {
-          localComments = dbComments;
-        }
-        renderComments(localComments);
-      } catch(e) {
-        renderComments(localComments);
-      }
-    }
-
-    async function submitComment() {
-      const name = document.getElementById('c-name').value.trim();
-      const text = document.getElementById('c-text').value.trim();
-      if (!name || !text) { alert('Please enter your name and comment.'); return; }
-
-      const articleId = parseInt(new URLSearchParams(window.location.search).get('id'));
-
-      // أضف محلياً فوراً
-      localComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
-      document.getElementById('c-name').value = '';
-      document.getElementById('c-text').value = '';
-      renderComments(localComments);
-
-      // احفظ في DB
-      try {
-        await fetch('/api/comments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, userName: name, articleId })
-        });
-      } catch(e) { console.error('DB comment save error:', e); }
-    }
-
-    function shareArticle(platform) {
-      const url   = window.location.href;
-      const title = currentArticle?.title || 'Article from Med Mosaic';
-      const urls  = {
-        twitter:  `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
-        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        whatsapp: `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`
+      coverImg.onerror = () => {
+        coverImg.src = `https://picsum.photos/seed/ocean${a.id}/1000/500`;
       };
-      window.open(urls[platform], '_blank');
     }
 
-    function copyLink() {
-      navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'));
+    renderArticleContent(currentLang);
+  }
+
+  // ── عرض المحتوى حسب اللغة ──
+  function renderArticleContent(lang) {
+    if (!currentArticle) return;
+    const a = currentArticle;
+
+    // العنوان
+    const titleEl = document.getElementById('article-title');
+    const title   = lang === 'fr' ? (a.title_fr || a.title)
+                  : lang === 'ar' ? (a.title_ar || a.title)
+                  : a.title;
+    if (titleEl) titleEl.textContent = title;
+
+    // المحتوى
+    const contentEl = document.getElementById('article-content');
+    if (!contentEl) return;
+    const content = lang === 'fr' ? (a.content_fr || a.content)
+                  : lang === 'ar' ? (a.content_ar || a.content)
+                  : a.content;
+    contentEl.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+    contentEl.innerHTML = content || '<p>Content coming soon.</p>';
+
+    // TOC من العناوين الفرعية
+    buildTOC(contentEl);
+
+    // تحديث الـ lang tabs
+    document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
+    const activeTab = document.querySelector(`.lang-tab[onclick*="'${lang}'"]`);
+    if (activeTab) activeTab.classList.add('active');
+  }
+
+  function switchArticleLang(lang, btn) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderArticleContent(lang);
+  }
+
+  // ── TOC ──
+  function buildTOC(contentEl) {
+    const tocList = document.getElementById('toc-list');
+    if (!tocList) return;
+    const headings = contentEl.querySelectorAll('h2, h3');
+    if (!headings.length) { tocList.innerHTML = ''; return; }
+    tocList.innerHTML = Array.from(headings).map((h, i) => {
+      const id = h.id || ('section-' + i);
+      h.id = id;
+      return `<li><a href="#${id}" style="color:var(--cyan);text-decoration:none;font-size:.85rem;display:block;padding:.3rem 0;border-bottom:1px solid rgba(0,201,200,.08)">${h.textContent}</a></li>`;
+    }).join('');
+  }
+
+  // ── Related Articles ──
+  function renderRelated(currentId) {
+    const container = document.getElementById('related-articles');
+    if (!container) return;
+    const related = allArticles.filter(a => a.id !== currentId).slice(0, 3);
+    if (!related.length) { container.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No related articles yet.</p>'; return; }
+    container.innerHTML = related.map(a => `
+      <div class="related-card" onclick="location.href='article.html?id=${a.id}'"
+           style="display:flex;gap:10px;padding:.8rem;border-radius:8px;cursor:pointer;border:1px solid rgba(0,201,200,.1);margin-bottom:8px;background:rgba(6,26,48,.5);transition:border-color .2s"
+           onmouseenter="this.style.borderColor='rgba(0,201,200,.35)'" onmouseleave="this.style.borderColor='rgba(0,201,200,.1)'">
+        <div style="width:60px;height:60px;border-radius:6px;overflow:hidden;flex-shrink:0">
+          <img src="${imgSrc(a)}" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+        </div>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--white);line-height:1.4;margin-bottom:3px">${a.title.slice(0,60)}${a.title.length>60?'…':''}</div>
+          <div style="font-size:.75rem;color:var(--muted)">📅 ${a.created_at ? new Date(a.created_at).toLocaleDateString('en-GB') : ''}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── Comments ──
+  let localComments = [];
+
+  async function loadComments(articleId) {
+    try {
+      const res = await fetch(`/api/comments?articleId=${articleId}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        localComments = data;
+      }
+      renderComments(localComments);
+    } catch(e) {
+      renderComments(localComments);
     }
+  }
 
-    function setLang(lang) {
-      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('lb-' + lang)?.classList.add('active');
+  function renderComments(list) {
+    const container = document.getElementById('comments-preview');
+    if (!container) return;
+    if (!list || !list.length) {
+      container.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No comments yet. Be the first!</p>';
+      return;
     }
+    container.innerHTML = list.map(c => `
+      <div class="mini-comment" style="background:rgba(0,201,200,.04);border:1px solid rgba(0,201,200,.1);border-radius:8px;padding:12px;margin-bottom:10px">
+        <div class="mini-comment-header" style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div class="mini-avatar" style="font-size:1.2rem">${c.avatar || '👤'}</div>
+          <div>
+            <h5 style="font-size:.85rem;color:var(--white);font-weight:700">${c.name || c.user_name || 'Anonymous'}</h5>
+            <span class="mini-date" style="font-size:.75rem;color:var(--muted)">${c.date || (c.created_at ? new Date(c.created_at).toLocaleDateString() : '')}</span>
+          </div>
+        </div>
+        <p style="font-size:.85rem;color:var(--text);line-height:1.6">${c.text}</p>
+      </div>
+    `).join('');
+  }
 
-    window.addEventListener('scroll', () => {
-      document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
-    });
+  async function submitComment() {
+    const nameEl = document.getElementById('c-name');
+    const textEl = document.getElementById('c-text');
+    if (!nameEl || !textEl) return;
+    const name = nameEl.value.trim();
+    const text = textEl.value.trim();
+    if (!name || !text) { alert('Please enter your name and comment.'); return; }
 
-    document.addEventListener('DOMContentLoaded', loadArticle);
+    const articleId = parseInt(new URLSearchParams(window.location.search).get('id'));
+
+    // أضف محلياً فوراً
+    localComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
+    nameEl.value = ''; textEl.value = '';
+    renderComments(localComments);
+
+    // احفظ في DB
+    try {
+      await fetch('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, userName: name, articleId })
+      });
+    } catch(e) { console.error('Comment save error:', e); }
+  }
+
+  // ── Share ──
+  function shareArticle(platform) {
+    const url   = window.location.href;
+    const title = currentArticle?.title || 'Article — Med Mosaic';
+    const urls  = {
+      twitter:  `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`
+    };
+    if (urls[platform]) window.open(urls[platform], '_blank');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => alert('Link copied!'));
+  }
+
+  function setLang(lang) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    const lb = document.getElementById('lb-' + lang);
+    if (lb) lb.classList.add('active');
+  }
+
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('scrollTop');
+    if (btn) btn.classList.toggle('visible', window.scrollY > 400);
+  });
+
+  document.addEventListener('DOMContentLoaded', loadArticle);
+  </script>
   <script src="i18n.js"></script>
 </body>
 </html>
