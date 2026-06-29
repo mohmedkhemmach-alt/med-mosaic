@@ -62,12 +62,13 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
 
-    // إضافة الأعمدة الجديدة إذا كان الجدول موجوداً مسبقاً (ALTER TABLE آمن)
-    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS title_fr VARCHAR(300) AFTER title`).catch(()=>{});
-    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS title_en VARCHAR(300) AFTER title_fr`).catch(()=>{});
-    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS excerpt VARCHAR(500) AFTER content`).catch(()=>{});
-    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) AFTER excerpt`).catch(()=>{});
-    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at TIMESTAMP NULL AFTER views`).catch(()=>{});
+    // إضافة الأعمدة الجديدة بأمان — كل عمود في try/catch منفصل
+    const addCol = async (sql) => { try { await conn.execute(sql); } catch(e) { /* already exists */ } };
+    await addCol("ALTER TABLE articles ADD COLUMN title_fr VARCHAR(300)");
+    await addCol("ALTER TABLE articles ADD COLUMN title_en VARCHAR(300)");
+    await addCol("ALTER TABLE articles ADD COLUMN excerpt VARCHAR(500)");
+    await addCol("ALTER TABLE articles ADD COLUMN cover_image VARCHAR(500)");
+    await addCol("ALTER TABLE articles ADD COLUMN published_at TIMESTAMP NULL");
 
     await conn.execute(`CREATE TABLE IF NOT EXISTS comments (
       id INT PRIMARY KEY AUTO_INCREMENT,
@@ -198,21 +199,22 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
 // GET /api/articles
 app.get("/api/articles", async (req, res) => {
   const { tag, search, page = 1, limit = 10, status = 'published' } = req.query;
-  const offset = (parseInt(page) - 1) * parseInt(limit);
+  const limitInt  = Math.max(1, parseInt(limit)  || 10);
+  const pageInt   = Math.max(1, parseInt(page)   || 1);
+  const offsetInt = (pageInt - 1) * limitInt;
   try {
     // بناء query الـ COUNT
     let countQuery = "SELECT COUNT(*) as total FROM articles WHERE status = ?";
     const countParams = [status];
-    if (tag)    { countQuery += " AND tag = ?";                            countParams.push(tag); }
-    if (search) { countQuery += " AND (title LIKE ? OR content LIKE ?)";  countParams.push(`%${search}%`, `%${search}%`); }
+    if (tag)    { countQuery += " AND tag = ?";                           countParams.push(tag); }
+    if (search) { countQuery += " AND (title LIKE ? OR content LIKE ?)"; countParams.push(`%${search}%`, `%${search}%`); }
 
-    // بناء query البيانات
+    // بناء query البيانات — LIMIT/OFFSET مضمّنة كأرقام مباشرة (لا prepared params)
     let dataQuery = "SELECT id, title, excerpt, cover_image, tag, emoji, author, status, views, published_at, created_at FROM articles WHERE status = ?";
     const dataParams = [status];
-    if (tag)    { dataQuery += " AND tag = ?";                            dataParams.push(tag); }
-    if (search) { dataQuery += " AND (title LIKE ? OR content LIKE ?)";  dataParams.push(`%${search}%`, `%${search}%`); }
-    dataQuery += " ORDER BY COALESCE(published_at, created_at) DESC LIMIT ? OFFSET ?";
-    dataParams.push(parseInt(limit), offset);
+    if (tag)    { dataQuery += " AND tag = ?";                           dataParams.push(tag); }
+    if (search) { dataQuery += " AND (title LIKE ? OR content LIKE ?)"; dataParams.push(`%${search}%`, `%${search}%`); }
+    dataQuery += ` ORDER BY COALESCE(published_at, created_at) DESC LIMIT ${limitInt} OFFSET ${offsetInt}`;
 
     const [[countRow]] = await pool.execute(countQuery, countParams);
     const [articles]   = await pool.execute(dataQuery,  dataParams);
@@ -220,8 +222,8 @@ app.get("/api/articles", async (req, res) => {
     res.json({
       articles,
       total:      countRow.total,
-      page:       parseInt(page),
-      totalPages: Math.ceil(countRow.total / parseInt(limit))
+      page:       pageInt,
+      totalPages: Math.ceil(countRow.total / limitInt)
     });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -250,9 +252,20 @@ app.post("/api/articles", authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const [userRows] = await pool.execute("SELECT name FROM users WHERE id = ?", [req.user.id]);
     const publishedAt = status === 'published' ? new Date() : null;
+    // نبني الـ query ديناميكياً حسب الأعمدة الموجودة
+    const [cols] = await pool.execute("SHOW COLUMNS FROM articles");
+    const colNames = cols.map(c => c.Field);
+    const has = (col) => colNames.includes(col);
+    let fields = "title, content, tag, emoji, author, author_id, status";
+    let values = [title, content, tag, emoji || "📰", userRows[0]?.name, req.user.id, status];
+    if (has('title_fr'))    { fields += ", title_fr";    values.push(title_fr    || null); }
+    if (has('title_en'))    { fields += ", title_en";    values.push(title_en    || null); }
+    if (has('excerpt'))     { fields += ", excerpt";     values.push(excerpt     || null); }
+    if (has('cover_image')) { fields += ", cover_image"; values.push(cover_image || null); }
+    if (has('published_at')){ fields += ", published_at";values.push(publishedAt); }
+    const placeholders = values.map(() => '?').join(', ');
     const [result] = await pool.execute(
-      "INSERT INTO articles (title, title_fr, title_en, content, excerpt, cover_image, tag, emoji, author, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [title, title_fr || null, title_en || null, content, excerpt || null, cover_image || null, tag, emoji || "📰", userRows[0]?.name, req.user.id, status, publishedAt]
+      `INSERT INTO articles (${fields}) VALUES (${placeholders})`, values
     );
     res.status(201).json({ id: result.insertId, title, status });
   } catch(e) { res.status(500).json({ error: e.message }); }
@@ -266,11 +279,18 @@ app.put("/api/articles/:id", authMiddleware, adminMiddleware, async (req, res) =
     const wasPublished = existing[0]?.status === 'published';
     const nowPublished = status === 'published';
     const publishedAt  = nowPublished && !wasPublished ? new Date() : (existing[0]?.published_at || null);
-
-    await pool.execute(
-      "UPDATE articles SET title=?, title_fr=?, title_en=?, content=?, excerpt=?, cover_image=?, tag=?, emoji=?, status=?, published_at=? WHERE id=?",
-      [title, title_fr || null, title_en || null, content, excerpt || null, cover_image || null, tag, emoji, status, publishedAt, req.params.id]
-    );
+    const [cols] = await pool.execute("SHOW COLUMNS FROM articles");
+    const colNames = cols.map(c => c.Field);
+    const has = (col) => colNames.includes(col);
+    let setParts = ["title=?","content=?","tag=?","emoji=?","status=?"];
+    let values   = [title, content, tag, emoji, status];
+    if (has('title_fr'))    { setParts.push("title_fr=?");    values.push(title_fr    || null); }
+    if (has('title_en'))    { setParts.push("title_en=?");    values.push(title_en    || null); }
+    if (has('excerpt'))     { setParts.push("excerpt=?");     values.push(excerpt     || null); }
+    if (has('cover_image')) { setParts.push("cover_image=?"); values.push(cover_image || null); }
+    if (has('published_at')){ setParts.push("published_at=?");values.push(publishedAt); }
+    values.push(req.params.id);
+    await pool.execute(`UPDATE articles SET ${setParts.join(', ')} WHERE id=?`, values);
     res.json({ message: "تم التعديل" });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
