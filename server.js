@@ -371,19 +371,19 @@ app.get("/api/stats", authMiddleware, adminMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ===== XAI / GROK AI ROUTES =====
+// ===== GROQ AI ROUTES =====
 
 // route مشترك — يستقبل طلبات من chatbot.html و ai.html
 async function callXAI(messages, maxTokens = 1024) {
-  if (!process.env.XAI_API_KEY) throw new Error('XAI_API_KEY not set in environment');
-  const response = await fetch('https://api.x.ai/v1/chat/completions', {
+  if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY not set in environment');
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type':  'application/json',
-      'Authorization': `Bearer ${process.env.XAI_API_KEY}`
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model:      'grok-3-mini-fast',
+      model:      'llama-3.3-70b-versatile',
       max_tokens: maxTokens,
       messages
     })
@@ -391,7 +391,7 @@ async function callXAI(messages, maxTokens = 1024) {
   const data = await response.json();
   if (!response.ok || data.error) {
     const msg = data.error?.message || JSON.stringify(data);
-    console.error('xAI API error:', msg);
+    console.error('Groq API error:', msg);
     throw new Error(msg);
   }
   return data.choices[0].message.content;
