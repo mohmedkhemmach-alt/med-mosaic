@@ -488,104 +488,97 @@
   <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
   <script>
-    // ── ARTICLE DATA ──
-    const ARTICLES = [
-      { id:1, emoji:"🐟", tag:"Research", title:"Scientists Discover 12 New Fish Species in the Indian Ocean", titleFr:"Les scientifiques découvrent 12 nouvelles espèces de poissons dans l'océan Indien", titleAr:"العلماء يكتشفون 12 نوعاً جديداً من الأسماك في المحيط الهندي", author:"Dr. Sara Benali", date:"January 15, 2025", views:4200, excerpt:"An international research team documents new deep-sea species.", img:"reef" },
-      { id:2, emoji:"🛢️", tag:"Pollution", title:"Oil Spill Threatens Morocco's Northern Coast", titleFr:"Une marée noire menace la côte nord du Maroc", titleAr:"تسرب نفطي يهدد الساحل الشمالي للمغرب", author:"Marine Desk", date:"June 15, 2025", views:3400, excerpt:"Emergency teams mobilized near the Strait of Gibraltar.", img:"sea" },
-      { id:3, emoji:"🌡️", tag:"Climate", title:"Mediterranean Sea Temperature Rises 1.5°C in 30 Years", titleFr:"La température de la mer Méditerranée augmente de 1,5°C en 30 ans", titleAr:"حرارة البحر الأبيض المتوسط ترتفع 1.5°C خلال 30 عاماً", author:"Climate Watch", date:"June 10, 2025", views:5100, excerpt:"New data confirms accelerating warming trends in the Mediterranean.", img:"earth" },
-      { id:4, emoji:"🐬", tag:"Marine Life", title:"Dolphins Return to Agadir Shores After Years of Absence", titleFr:"Les dauphins reviennent sur les côtes d'Agadir", titleAr:"الدلافين تعود إلى شواطئ أغادير بعد سنوات من الغياب", author:"Field Reporter", date:"June 8, 2025", views:2900, excerpt:"Groups of spotted dolphins spotted near the Moroccan coast.", img:"wave" },
-      { id:5, emoji:"🪸", tag:"Protection", title:"Morocco Commits to Protecting 20% of its Coastline by 2030", titleFr:"Le Maroc s'engage à protéger 20% de son littoral d'ici 2030", titleAr:"المغرب يلتزم بحماية 20% من ساحله بحلول 2030", author:"Policy Desk", date:"June 5, 2025", views:4700, excerpt:"A new national marine protection initiative was signed at the Marrakech Forum.", img:"nature" },
-    ];
-
-    const ARTICLE_CONTENT = {
-      1: {
-        en: `<p id="intro">In an exciting scientific discovery, an international team of researchers successfully identified and documented <strong>12 new fish species</strong> in the depths of the Indian Ocean, at depths exceeding 3,000 meters below the surface.</p>
-        <h2 id="details">Scientific Details</h2>
-        <p>The research team, composed of scientists from 15 countries, used advanced submersibles equipped with high-definition cameras and sophisticated sensors. The mission lasted 47 days and collected thousands of images and samples.</p>
-        <blockquote>"This discovery proves that ocean depths still hide many secrets yet to be unveiled by science. 95% of the ocean floor remains unexplored." — Dr. Sara Benali, Mission Lead</blockquote>
-        <h2 id="impact">Environmental Impact</h2>
-        <p>The newly discovered species display remarkable adaptations to complete darkness and extreme pressure, including:</p>
-        <ul>
-          <li>Unique bioluminescent organs found nowhere else</li>
-          <li>Digestive systems based on volcanic sulfur</li>
-          <li>Oversized eyes to capture any available light</li>
-          <li>Transparent skin revealing internal organs</li>
-        </ul>
-        <h2 id="solutions">Key Findings</h2>
-        <p>This discovery reinforces scientific arguments for protecting deep-sea areas from mineral extraction and other human activities. Many of these species could be a source of future pharmaceutical compounds.</p>
-        <h2 id="conclusion">Conclusion</h2>
-        <p>This discovery reminds us that the oceans remain largely unknown, and that their preservation is not only an environmental responsibility but a scientific and civilizational necessity.</p>`,
-        fr: `<p id="intro">Dans une découverte scientifique majeure, une équipe internationale de chercheurs a réussi à identifier et documenter <strong>12 nouvelles espèces de poissons</strong> dans les profondeurs de l'océan Indien, à plus de 3000 mètres sous la surface.</p>
-        <h2 id="details">Détails Scientifiques</h2>
-        <p>L'équipe de recherche, composée de scientifiques de 15 pays, a utilisé des sous-marins avancés équipés de caméras haute définition et de capteurs sophistiqués. La mission a duré 47 jours et a collecté des milliers d'images et d'échantillons.</p>
-        <blockquote>« Cette découverte prouve que les profondeurs des océans cachent encore de nombreux secrets que la science n'a pas encore révélés. 95% des fonds marins restent inexplorés. » — Dr. Sara Benali</blockquote>
-        <h2 id="impact">Impact Environnemental</h2>
-        <p>Les nouvelles espèces découvertes présentent des adaptations remarquables à l'obscurité totale et à la pression immense des profondeurs.</p>
-        <h2 id="solutions">Importance de la découverte</h2>
-        <p>Cette découverte renforce les arguments scientifiques en faveur de la protection des zones marines profondes contre l'extraction minière et les activités humaines.</p>
-        <h2 id="conclusion">Conclusion</h2>
-        <p>Cette découverte nous rappelle que les océans restent largement méconnus et que leur préservation est non seulement une responsabilité environnementale mais aussi une nécessité scientifique et civilisationnelle.</p>`,
-        ar: `<p id="intro">في اكتشاف علمي مثير، تمكّن فريق دولي من العلماء من رصد وتوثيق <strong>12 نوعاً جديداً من الأسماك</strong> في أعماق المحيط الهندي، على عمق يتجاوز 3000 متر تحت سطح الماء.</p>
-        <h2 id="details">التفاصيل العلمية</h2>
-        <p>استخدم الفريق البحثي المؤلف من علماء من 15 دولة غواصات متطورة مجهزة بكاميرات عالية الدقة وأجهزة استشعار متقدمة. استغرقت البعثة 47 يوماً وجمعت آلاف الصور والعينات.</p>
-        <blockquote>قالت د. سارة بنعلي: "هذا الاكتشاف يُثبت أن أعماق المحيطات لا تزال تخفي أسراراً كثيرة. 95% من قاع المحيطات لا يزال غير مُستكشَف."</blockquote>
-        <h2 id="impact">التأثير البيئي</h2>
-        <p>الأنواع الجديدة المكتشفة تُظهر تكيفات مذهلة مع الظلام التام والضغط الهائل في الأعماق.</p>
-        <h2 id="solutions">أهمية الاكتشاف</h2>
-        <p>يُعزز هذا الاكتشاف الحجج العلمية الداعية إلى حماية المناطق البحرية العميقة من التنقيب عن المعادن.</p>
-        <h2 id="conclusion">الخلاصة</h2>
-        <p>يُذكّرنا هذا الاكتشاف بأن المحيطات لا تزال مجهولة إلى حدٍّ كبير، وأن الحفاظ عليها ضرورة علمية وحضارية.</p>`
-      }
-    };
-
-    function getDefaultContent(article, lang) {
-      const title = lang === 'fr' ? article.titleFr : lang === 'ar' ? article.titleAr : article.title;
-      const excerpt = article.excerpt;
-      return `<p id="intro">${excerpt}</p>
-        <h2 id="details">Details</h2>
-        <p>Our editorial team is currently preparing the full content for this article. Stay tuned for the complete coverage coming soon.</p>
-        <h2 id="impact">Environmental Impact</h2>
-        <p>This topic is of significant importance in the field of marine environmental protection. We will cover it in detail in the coming days.</p>
-        <h2 id="conclusion">Conclusion</h2>
-        <p>The marine environment is a treasure worth protecting and studying. Join us in our mission to raise awareness and safeguard our oceans.</p>`;
+    // ── SEEDS للصور الاحتياطية ──
+    const SEEDS = ['reef','ocean','sea','beach','wave','nature','earth','plastic','dolphin','coral'];
+    function imgSrc(a) {
+      if (a.cover_image) return a.cover_image;
+      return `https://picsum.photos/seed/${SEEDS[a.id % SEEDS.length]}/1000/500`;
     }
 
     let currentArticle = null;
     let currentLang = 'en';
+    let allArticles  = []; // للـ related
 
-    function loadArticle() {
+    // ── تحميل المقال من API ──
+    async function loadArticle() {
       const params = new URLSearchParams(window.location.search);
-      const id = parseInt(params.get('id')) || 1;
-      currentArticle = ARTICLES.find(a => a.id === id) || ARTICLES[0];
+      const id     = parseInt(params.get('id'));
 
-      document.getElementById('article-emoji').textContent = currentArticle.emoji;
-      document.getElementById('article-tag').textContent = currentArticle.tag;
-      document.getElementById('article-author').textContent = currentArticle.author;
-      document.getElementById('article-date').textContent = currentArticle.date;
-      document.getElementById('article-views').textContent = (currentArticle.views + 1).toLocaleString();
-      document.getElementById('breadcrumb-title').textContent = currentArticle.title;
-      document.title = currentArticle.title + ' — Med Mosaic';
+      if (!id) {
+        showError('No article ID specified.');
+        return;
+      }
 
+      try {
+        // جلب المقال الحالي
+        const res = await fetch(`/api/articles/${id}`);
+        if (!res.ok) { showError('Article not found.'); return; }
+        currentArticle = await res.json();
+
+        // جلب كل المقالات للـ related
+        const resAll = await fetch('/api/articles?limit=20&page=1');
+        const dataAll = await resAll.json();
+        allArticles = dataAll.articles || [];
+
+        renderArticle();
+        renderRelated(id);
+        loadCommentsFromDB(id);
+
+      } catch(e) {
+        console.error('Load error:', e);
+        showError('Could not load article.');
+      }
+    }
+
+    function showError(msg) {
+      document.getElementById('article-title').textContent = msg;
+    }
+
+    function renderArticle() {
+      const a = currentArticle;
+
+      // Hero
+      document.getElementById('article-emoji').textContent  = a.emoji || '📰';
+      document.getElementById('article-tag').textContent    = a.tag   || '';
+      document.getElementById('article-author').textContent = a.author || 'Med Mosaic';
+      document.getElementById('article-date').textContent   = a.created_at
+        ? new Date(a.created_at).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})
+        : '';
+      document.getElementById('article-views').textContent  = (a.views || 0).toLocaleString();
+      document.getElementById('breadcrumb-title').textContent = a.title;
+      document.title = a.title + ' — Med Mosaic';
+
+      // Cover image
       const coverImg = document.getElementById('article-cover-img');
-      coverImg.src = `https://picsum.photos/seed/${currentArticle.img || 'ocean'}/1000/500`;
-      coverImg.alt = currentArticle.title;
+      coverImg.src = imgSrc(a);
+      coverImg.alt = a.title;
 
       renderArticleContent(currentLang);
-      renderRelated(id);
-      renderComments();
     }
 
     function renderArticleContent(lang) {
-      const titleKey = lang === 'fr' ? 'titleFr' : lang === 'ar' ? 'titleAr' : 'title';
-      document.getElementById('article-title').textContent = currentArticle[titleKey] || currentArticle.title;
+      if (!currentArticle) return;
+      const a = currentArticle;
 
-      // RTL for Arabic
+      // العنوان — استخدم الحقل المناسب حسب اللغة إن وُجد
+      const titleField = lang === 'fr' ? (a.title_fr || a.title)
+                       : lang === 'ar' ? (a.title_ar || a.title)
+                       : a.title;
+      document.getElementById('article-title').textContent = titleField;
+
+      // المحتوى — استخدم الحقل المناسب حسب اللغة إن وُجد
+      const contentField = lang === 'fr' ? (a.content_fr || a.content)
+                         : lang === 'ar' ? (a.content_ar || a.content)
+                         : a.content;
+
       const articleEl = document.getElementById('article-content');
       articleEl.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+      articleEl.innerHTML = contentField || '<p>Content coming soon.</p>';
 
-      const contentMap = ARTICLE_CONTENT[currentArticle.id];
-      const content = contentMap ? (contentMap[lang] || contentMap.en) : getDefaultContent(currentArticle, lang);
-      articleEl.innerHTML = content;
+      // اللغة على الـ lang-tabs
+      document.querySelectorAll('.lang-tab').forEach(b => b.classList.remove('active'));
+      const activeTab = document.querySelector(`.lang-tab[onclick*="'${lang}'"]`);
+      if (activeTab) activeTab.classList.add('active');
     }
 
     function switchArticleLang(lang, btn) {
@@ -596,47 +589,50 @@
     }
 
     function renderRelated(currentId) {
-      const related = ARTICLES.filter(a => a.id !== currentId).slice(0, 3);
-      document.getElementById('related-articles').innerHTML = related.map(a => `
-        <div class="related-card" onclick="location.href='article.html?id=${a.id}'">
-          <div class="related-thumb"><img src="https://picsum.photos/seed/${a.img || 'ocean'}/100/100" alt="${a.title}" loading="lazy" /></div>
-          <div>
-            <h4>${a.title}</h4>
-            <p>📅 ${a.date}</p>
-          </div>
-        </div>
-      `).join('');
+      const related = allArticles.filter(a => a.id !== currentId).slice(0, 3);
+      document.getElementById('related-articles').innerHTML = related.length
+        ? related.map(a => `
+            <div class="related-card" onclick="location.href='article.html?id=${a.id}'">
+              <div class="related-thumb">
+                <img src="${imgSrc(a)}" alt="${a.title}" loading="lazy"/>
+              </div>
+              <div>
+                <h4>${a.title}</h4>
+                <p>📅 ${a.created_at ? new Date(a.created_at).toLocaleDateString('en-GB') : ''}</p>
+              </div>
+            </div>
+          `).join('')
+        : '<p style="color:var(--muted);font-size:.85rem">No related articles yet.</p>';
     }
 
-    let articleComments = [
-      { name: "Ahmed Al-Maghribi", avatar: "👨", text: "Excellent and very informative article! Thank you for this valuable content.", date: "2 days ago" },
-      { name: "Fatima Benali",     avatar: "👩", text: "Very interesting information. Are there more details available on this topic?", date: "1 day ago" }
-    ];
+    // ── التعليقات ──
+    let localComments = [];
 
-    function renderComments(comments) {
-      const list = comments || articleComments;
-      document.getElementById('comments-preview').innerHTML = list.map(c => `
+    function renderComments(list) {
+      document.getElementById('comments-preview').innerHTML = (list || localComments).map(c => `
         <div class="mini-comment">
           <div class="mini-comment-header">
             <div class="mini-avatar">${c.avatar || '👤'}</div>
-            <div><h5>${c.name || c.user_name}</h5><span class="mini-date">${c.date || new Date(c.created_at).toLocaleDateString()}</span></div>
+            <div>
+              <h5>${c.name || c.user_name || 'Anonymous'}</h5>
+              <span class="mini-date">${c.date || (c.created_at ? new Date(c.created_at).toLocaleDateString() : '')}</span>
+            </div>
           </div>
           <p>${c.text}</p>
         </div>
-      `).join('');
+      `).join('') || '<p style="color:var(--muted);font-size:.85rem">No comments yet.</p>';
     }
 
-    async function loadCommentsFromDB() {
+    async function loadCommentsFromDB(articleId) {
       try {
-        const res = await fetch('/api/comments');
+        const res = await fetch(`/api/comments?articleId=${articleId}`);
         const dbComments = await res.json();
-        if (dbComments && dbComments.length > 0) {
-          renderComments(dbComments);
-        } else {
-          renderComments(articleComments);
+        if (Array.isArray(dbComments) && dbComments.length > 0) {
+          localComments = dbComments;
         }
+        renderComments(localComments);
       } catch(e) {
-        renderComments(articleComments);
+        renderComments(localComments);
       }
     }
 
@@ -644,33 +640,32 @@
       const name = document.getElementById('c-name').value.trim();
       const text = document.getElementById('c-text').value.trim();
       if (!name || !text) { alert('Please enter your name and comment.'); return; }
-      
+
+      const articleId = parseInt(new URLSearchParams(window.location.search).get('id'));
+
       // أضف محلياً فوراً
-      articleComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
+      localComments.unshift({ name, avatar: '👤', text, date: 'Just now' });
       document.getElementById('c-name').value = '';
       document.getElementById('c-text').value = '';
-      renderComments(articleComments);
+      renderComments(localComments);
 
       // احفظ في DB
       try {
         await fetch('/api/comments', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, userName: name, articleId: 1 })
+          body: JSON.stringify({ text, userName: name, articleId })
         });
-      } catch(e) { console.error('DB save error:', e); }
+      } catch(e) { console.error('DB comment save error:', e); }
     }
 
-    // حمّل التعليقات من DB عند فتح الصفحة
-    loadCommentsFromDB();
-
     function shareArticle(platform) {
-      const url = window.location.href;
+      const url   = window.location.href;
       const title = currentArticle?.title || 'Article from Med Mosaic';
-      const urls = {
-        twitter:   `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
-        facebook:  `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
-        whatsapp:  `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`
+      const urls  = {
+        twitter:  `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(title + ' ' + url)}`
       };
       window.open(urls[platform], '_blank');
     }
@@ -689,7 +684,6 @@
     });
 
     document.addEventListener('DOMContentLoaded', loadArticle);
-  </script>
   <script src="i18n.js"></script>
 </body>
 </html>

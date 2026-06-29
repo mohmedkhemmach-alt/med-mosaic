@@ -47,15 +47,27 @@ async function initDB() {
     await conn.execute(`CREATE TABLE IF NOT EXISTS articles (
       id INT PRIMARY KEY AUTO_INCREMENT,
       title VARCHAR(300) NOT NULL,
+      title_fr VARCHAR(300),
+      title_en VARCHAR(300),
       content LONGTEXT NOT NULL,
+      excerpt VARCHAR(500),
+      cover_image VARCHAR(500),
       tag VARCHAR(100),
       emoji VARCHAR(10) DEFAULT NULL,
       author VARCHAR(100),
       author_id INT,
       status ENUM('draft','pending','published','archived') DEFAULT 'draft',
       views INT DEFAULT 0,
+      published_at TIMESTAMP NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // إضافة الأعمدة الجديدة إذا كان الجدول موجوداً مسبقاً (ALTER TABLE آمن)
+    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS title_fr VARCHAR(300) AFTER title`).catch(()=>{});
+    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS title_en VARCHAR(300) AFTER title_fr`).catch(()=>{});
+    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS excerpt VARCHAR(500) AFTER content`).catch(()=>{});
+    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS cover_image VARCHAR(500) AFTER excerpt`).catch(()=>{});
+    await conn.execute(`ALTER TABLE articles ADD COLUMN IF NOT EXISTS published_at TIMESTAMP NULL AFTER views`).catch(()=>{});
 
     await conn.execute(`CREATE TABLE IF NOT EXISTS comments (
       id INT PRIMARY KEY AUTO_INCREMENT,
@@ -89,12 +101,23 @@ async function initDB() {
     const [arts] = await conn.execute("SELECT COUNT(*) as cnt FROM articles");
     if (arts[0].cnt === 0) {
       await conn.execute(
-        `INSERT INTO articles (title, content, tag, emoji, author, author_id, status, views) VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO articles (title, content, excerpt, tag, emoji, author, author_id, status, views, published_at) VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()), (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()), (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
         [
-          "اكتشاف 12 نوعاً جديداً من الأسماك", "محتوى المقال...", "تنوع بيولوجي", "🐠", "د. سارة بنعلي", 1, "published", 2140,
-          "تلوث البلاستيك في المتوسط", "محتوى المقال...", "تلوث", "🏭", "فريق التحرير", 1, "published", 3850,
-          "ارتفاع حرارة المحيطات", "محتوى المقال...", "تغير مناخي", "🌡️", "أحمد الحسيني", 2, "pending", 1920
+          "اكتشاف 12 نوعاً جديداً من الأسماك في المحيط الهندي",
+          "<p>في اكتشاف علمي مثير، تمكّن فريق دولي من العلماء من رصد وتوثيق <strong>12 نوعاً جديداً من الأسماك</strong> في أعماق المحيط الهندي.</p>",
+          "فريق دولي يوثّق أنواعاً جديدة في أعماق المحيط الهندي تتجاوز 3000 متر.",
+          "بحث علمي", "🐠", "د. سارة بنعلي", 1, "published", 2140,
+
+          "تلوث البلاستيك يهدد المتوسط: 8 ملايين طن سنوياً",
+          "<p>تكشف أحدث الدراسات أن <strong>8 ملايين طن</strong> من البلاستيك تصل إلى المحيطات كل عام، مما يهدد النظام البيئي البحري.</p>",
+          "أحدث الدراسات تكشف أرقاماً مقلقة عن حجم التلوث البلاستيكي في البحر المتوسط.",
+          "تلوث", "🏭", "فريق التحرير", 1, "published", 3850,
+
+          "ارتفاع حرارة المحيطات يُنذر بكارثة مرجانية",
+          "<p>يُحذّر العلماء من أن ارتفاع درجة حرارة المحيطات بمعدل <strong>2.1 درجة مئوية</strong> خلال العقد الماضي يُهدد الشعاب المرجانية بالانقراض.</p>",
+          "العلماء يُحذّرون من تأثير ارتفاع حرارة المحيطات على الشعاب المرجانية.",
+          "تغير مناخي", "🌡️", "أحمد الحسيني", 1, "published", 1920
         ]
       );
     }
@@ -174,17 +197,32 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
 // ===== ARTICLES ROUTES =====
 // GET /api/articles
 app.get("/api/articles", async (req, res) => {
-  const { tag, search, page = 1, limit = 10 } = req.query;
+  const { tag, search, page = 1, limit = 10, status = 'published' } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
   try {
-    let query = "SELECT * FROM articles WHERE status = 'published'";
-    const params = [];
-    if (tag) { query += " AND tag = ?"; params.push(tag); }
-    if (search) { query += " AND (title LIKE ? OR content LIKE ?)"; params.push(`%${search}%`, `%${search}%`); }
-    const [all] = await pool.execute(query, params);
-    const total = all.length;
-    const start = (page - 1) * limit;
-    const paginated = all.slice(start, start + parseInt(limit));
-    res.json({ articles: paginated, total, page: parseInt(page), totalPages: Math.ceil(total / limit) });
+    // بناء query الـ COUNT
+    let countQuery = "SELECT COUNT(*) as total FROM articles WHERE status = ?";
+    const countParams = [status];
+    if (tag)    { countQuery += " AND tag = ?";                            countParams.push(tag); }
+    if (search) { countQuery += " AND (title LIKE ? OR content LIKE ?)";  countParams.push(`%${search}%`, `%${search}%`); }
+
+    // بناء query البيانات
+    let dataQuery = "SELECT id, title, excerpt, cover_image, tag, emoji, author, status, views, published_at, created_at FROM articles WHERE status = ?";
+    const dataParams = [status];
+    if (tag)    { dataQuery += " AND tag = ?";                            dataParams.push(tag); }
+    if (search) { dataQuery += " AND (title LIKE ? OR content LIKE ?)";  dataParams.push(`%${search}%`, `%${search}%`); }
+    dataQuery += " ORDER BY COALESCE(published_at, created_at) DESC LIMIT ? OFFSET ?";
+    dataParams.push(parseInt(limit), offset);
+
+    const [[countRow]] = await pool.execute(countQuery, countParams);
+    const [articles]   = await pool.execute(dataQuery,  dataParams);
+
+    res.json({
+      articles,
+      total:      countRow.total,
+      page:       parseInt(page),
+      totalPages: Math.ceil(countRow.total / parseInt(limit))
+    });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -193,32 +231,45 @@ app.get("/api/articles/:id", async (req, res) => {
   try {
     const [rows] = await pool.execute("SELECT * FROM articles WHERE id = ?", [req.params.id]);
     if (!rows[0]) return res.status(404).json({ error: "المقال غير موجود" });
-    await pool.execute("UPDATE articles SET views = views + 1 WHERE id = ?", [req.params.id]);
     res.json(rows[0]);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/articles/:id/view  — زيادة المشاهدات منفصلة
+app.post("/api/articles/:id/view", async (req, res) => {
+  try {
+    await pool.execute("UPDATE articles SET views = views + 1 WHERE id = ?", [req.params.id]);
+    res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // POST /api/articles (admin)
 app.post("/api/articles", authMiddleware, adminMiddleware, async (req, res) => {
-  const { title, content, tag, emoji, status = "draft" } = req.body;
+  const { title, title_fr, title_en, content, excerpt, cover_image, tag, emoji, status = "draft" } = req.body;
   if (!title || !content) return res.status(400).json({ error: "العنوان والمحتوى مطلوبان" });
   try {
     const [userRows] = await pool.execute("SELECT name FROM users WHERE id = ?", [req.user.id]);
+    const publishedAt = status === 'published' ? new Date() : null;
     const [result] = await pool.execute(
-      "INSERT INTO articles (title, content, tag, emoji, author, author_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [title, content, tag, emoji || "📰", userRows[0]?.name, req.user.id, status]
+      "INSERT INTO articles (title, title_fr, title_en, content, excerpt, cover_image, tag, emoji, author, author_id, status, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [title, title_fr || null, title_en || null, content, excerpt || null, cover_image || null, tag, emoji || "📰", userRows[0]?.name, req.user.id, status, publishedAt]
     );
-    res.status(201).json({ id: result.insertId, title, content, tag, status });
+    res.status(201).json({ id: result.insertId, title, status });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 // PUT /api/articles/:id (admin)
 app.put("/api/articles/:id", authMiddleware, adminMiddleware, async (req, res) => {
-  const { title, content, tag, emoji, status } = req.body;
+  const { title, title_fr, title_en, content, excerpt, cover_image, tag, emoji, status } = req.body;
   try {
+    const [existing] = await pool.execute("SELECT status, published_at FROM articles WHERE id = ?", [req.params.id]);
+    const wasPublished = existing[0]?.status === 'published';
+    const nowPublished = status === 'published';
+    const publishedAt  = nowPublished && !wasPublished ? new Date() : (existing[0]?.published_at || null);
+
     await pool.execute(
-      "UPDATE articles SET title=?, content=?, tag=?, emoji=?, status=? WHERE id=?",
-      [title, content, tag, emoji, status, req.params.id]
+      "UPDATE articles SET title=?, title_fr=?, title_en=?, content=?, excerpt=?, cover_image=?, tag=?, emoji=?, status=?, published_at=? WHERE id=?",
+      [title, title_fr || null, title_en || null, content, excerpt || null, cover_image || null, tag, emoji, status, publishedAt, req.params.id]
     );
     res.json({ message: "تم التعديل" });
   } catch(e) { res.status(500).json({ error: e.message }); }

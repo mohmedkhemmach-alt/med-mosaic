@@ -615,53 +615,11 @@
         <h2>Featured Stories</h2>
         <a href="news.html" class="view-all">View All →</a>
       </div>
-      <div class="featured-grid">
-        <!-- MAIN STORY -->
-        <a href="article.html" class="featured-main news-card">
-          <img
-            src="https://picsum.photos/seed/reef/900/600"
-            alt="Fish swimming in coral reefs"
-            class="news-card-img"
-            loading="lazy"
-          />
-          <div class="featured-caption">
-            <span class="featured-caption-tag">🪸 Marine Ecology</span>
-            <h3>Coral Reefs: Cities of the Ocean Under Climate Threat</h3>
-            <p>Coral reefs cover less than 1% of the ocean floor, yet shelter over 25% of all marine species. An investigation into global warming risks.</p>
-          </div>
-        </a>
-
-        <!-- SIDE 1 -->
-        <a href="article.html" class="featured-side news-card">
-          <img
-            src="https://picsum.photos/seed/plastic/700/500"
-            alt="Plastic pollution at sea"
-            class="news-card-img"
-            style="height:100%"
-            loading="lazy"
-          />
-          <div class="featured-caption">
-            <span class="featured-caption-tag">🚨 Pollution</span>
-            <h3>8 Million Tons of Plastic Choking Our Oceans Every Year</h3>
-            <p>UN Report 2025</p>
-          </div>
-        </a>
-
-        <!-- SIDE 2 -->
-        <a href="article.html" class="featured-side news-card">
-          <img
-            src="https://picsum.photos/seed/dolphin/700/500"
-            alt="Dolphins in the Atlantic Ocean"
-            class="news-card-img"
-            style="height:100%"
-            loading="lazy"
-          />
-          <div class="featured-caption">
-            <span class="featured-caption-tag">🐬 Marine Life</span>
-            <h3>Dolphins Return to Agadir Shores After Years of Absence</h3>
-            <p>Groups of spotted dolphins spotted near the Moroccan coast</p>
-          </div>
-        </a>
+      <div class="featured-grid" id="featured-grid">
+        <!-- filled dynamically -->
+        <div style="color:var(--muted);padding:3rem;text-align:center;grid-column:1/-1">
+          <span style="font-size:2rem">🌊</span><br/>Loading featured stories…
+        </div>
       </div>
     </div>
   </section>
@@ -674,76 +632,7 @@
         <a href="news.html" class="view-all">More →</a>
       </div>
       <div class="news-grid" id="news-grid">
-
-        <a href="article.html" class="news-card">
-          <div class="news-card-img-wrap">
-            <img
-              src="https://picsum.photos/seed/oil/600/400"
-              alt="Oil pollution at sea"
-              class="news-card-img" loading="lazy"
-            />
-            <span class="news-card-tag">⚠️ Alert</span>
-          </div>
-          <div class="news-card-body">
-            <div class="news-meta">
-              <span class="news-date">June 15, 2025</span>
-              <span class="news-source">Reuters</span>
-            </div>
-            <div class="news-title">Oil Spill Threatens Morocco's Northern Coast — Emergency Teams Mobilized</div>
-            <div class="news-excerpt">Moroccan environmental authorities deploy rapid response teams to contain an oil spill detected near the Strait of Gibraltar, fearing it may reach the coastline.</div>
-          </div>
-          <div class="news-card-footer">
-            <span class="read-more">Read More →</span>
-            <span class="news-views">👁 3.4K</span>
-          </div>
-        </a>
-
-        <a href="article.html" class="news-card">
-          <div class="news-card-img-wrap">
-            <img
-              src="https://picsum.photos/seed/nature/600/400"
-              alt="Calm sea and nature reserve"
-              class="news-card-img" loading="lazy"
-            />
-            <span class="news-card-tag">🌿 Conservation</span>
-          </div>
-          <div class="news-card-body">
-            <div class="news-meta">
-              <span class="news-date">June 12, 2025</span>
-              <span class="news-source">Morocco Environment Agency</span>
-            </div>
-            <div class="news-title">Morocco Expands Marine Protected Areas to 10% of Territorial Waters</div>
-            <div class="news-excerpt">A historic announcement raising Morocco's marine protected area coverage ahead of COP30, scheduled to be held in Marrakech.</div>
-          </div>
-          <div class="news-card-footer">
-            <span class="read-more">Read More →</span>
-            <span class="news-views">👁 2.1K</span>
-          </div>
-        </a>
-
-        <a href="article.html" class="news-card">
-          <div class="news-card-img-wrap">
-            <img
-              src="https://picsum.photos/seed/beach/600/400"
-              alt="Moroccan Atlantic beach"
-              class="news-card-img" loading="lazy"
-            />
-            <span class="news-card-tag">🏖️ Tourism</span>
-          </div>
-          <div class="news-card-body">
-            <div class="news-meta">
-              <span class="news-date">June 9, 2025</span>
-              <span class="news-source">Mubashir Morocco</span>
-            </div>
-            <div class="news-title">Agadir Beaches Awarded European Blue Flag for the Third Consecutive Year</div>
-            <div class="news-excerpt">International recognition for Agadir's water quality and cleanliness, reflecting sustained efforts by the municipality and civil society to protect the coastal ecosystem.</div>
-          </div>
-          <div class="news-card-footer">
-            <span class="read-more">Read More →</span>
-            <span class="news-views">👁 5.7K</span>
-          </div>
-        </a>
-
+        <!-- filled dynamically -->
       </div>
     </div>
   </section>
@@ -1018,6 +907,106 @@
       btn.style.background = '#2dc653';
       input.value = '';
     }
+
+    // ── DYNAMIC ARTICLES FROM DB ──
+    const SEEDS = ['reef','ocean','sea','beach','wave','nature','earth','plastic','dolphin','coral'];
+
+    function imgSrc(article) {
+      if (article.cover_image) return article.cover_image;
+      return `https://picsum.photos/seed/${SEEDS[article.id % SEEDS.length]}/900/600`;
+    }
+
+    function fmtDate(d) {
+      if (!d) return '';
+      return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    async function loadFeatured() {
+      const grid = document.getElementById('featured-grid');
+      try {
+        const res  = await fetch('/api/articles?limit=3&page=1');
+        const data = await res.json();
+        const arts = data.articles || [];
+
+        if (!arts.length) {
+          grid.innerHTML = '<p style="color:var(--muted);padding:2rem;grid-column:1/-1">No published articles yet. Add some from the admin panel.</p>';
+          return;
+        }
+
+        const [main, s1, s2] = arts;
+        grid.innerHTML = `
+          <a href="article.html?id=${main.id}" class="featured-main news-card">
+            <img src="${imgSrc(main)}" alt="${main.title}" class="news-card-img" loading="lazy"/>
+            <div class="featured-caption">
+              <span class="featured-caption-tag">${main.emoji || '📰'} ${main.tag || ''}</span>
+              <h3>${main.title}</h3>
+              <p>${main.excerpt || main.content?.slice(0,120) || ''}</p>
+            </div>
+          </a>
+          ${s1 ? `
+          <a href="article.html?id=${s1.id}" class="featured-side news-card">
+            <img src="${imgSrc(s1)}" alt="${s1.title}" class="news-card-img" style="height:100%" loading="lazy"/>
+            <div class="featured-caption">
+              <span class="featured-caption-tag">${s1.emoji || '📰'} ${s1.tag || ''}</span>
+              <h3>${s1.title}</h3>
+              <p>${s1.excerpt || s1.content?.slice(0,80) || ''}</p>
+            </div>
+          </a>` : ''}
+          ${s2 ? `
+          <a href="article.html?id=${s2.id}" class="featured-side news-card">
+            <img src="${imgSrc(s2)}" alt="${s2.title}" class="news-card-img" style="height:100%" loading="lazy"/>
+            <div class="featured-caption">
+              <span class="featured-caption-tag">${s2.emoji || '📰'} ${s2.tag || ''}</span>
+              <h3>${s2.title}</h3>
+              <p>${s2.excerpt || s2.content?.slice(0,80) || ''}</p>
+            </div>
+          </a>` : ''}
+        `;
+      } catch(e) {
+        console.error('Featured load error:', e);
+        grid.innerHTML = '<p style="color:var(--muted);padding:2rem;grid-column:1/-1">Could not load articles.</p>';
+      }
+    }
+
+    async function loadLatestNews() {
+      const grid = document.getElementById('news-grid');
+      try {
+        const res  = await fetch('/api/articles?limit=6&page=1');
+        const data = await res.json();
+        const arts = (data.articles || []).slice(3); // skip first 3 (already in featured)
+
+        if (!arts.length) {
+          grid.innerHTML = '<p style="color:var(--muted);padding:2rem">No more articles.</p>';
+          return;
+        }
+
+        grid.innerHTML = arts.map(a => `
+          <a href="article.html?id=${a.id}" class="news-card">
+            <div class="news-card-img-wrap">
+              <img src="${imgSrc(a)}" alt="${a.title}" class="news-card-img" loading="lazy"/>
+              <span class="news-card-tag">${a.emoji || '📰'} ${a.tag || ''}</span>
+            </div>
+            <div class="news-card-body">
+              <div class="news-meta">
+                <span class="news-date">${fmtDate(a.created_at)}</span>
+                ${a.author ? `<span class="news-source">${a.author}</span>` : ''}
+              </div>
+              <div class="news-title">${a.title}</div>
+              <div class="news-excerpt">${a.excerpt || a.content?.slice(0,140) || ''}</div>
+            </div>
+            <div class="news-card-footer">
+              <span class="read-more">Read More →</span>
+              <span class="news-views">👁 ${(a.views || 0).toLocaleString()}</span>
+            </div>
+          </a>
+        `).join('');
+      } catch(e) {
+        console.error('Latest news load error:', e);
+      }
+    }
+
+    loadFeatured();
+    loadLatestNews();
 
   </script>
   <script src="i18n.js"></script>
