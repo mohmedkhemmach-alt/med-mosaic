@@ -1013,8 +1013,8 @@ window.addEventListener("DOMContentLoaded",function(){
 // ══════════════════════════════════════════
 
 // ── AUTH ──
-const TOKEN = localStorage.getItem('adminToken');
-if (!TOKEN) window.location.href = '../login.html';
+const TOKEN = localStorage.getItem('adminToken') || '';
+// لا نجبر تسجيل الدخول للـ AI tools — فقط للنشر
 
 const LANGS = { en:'English', fr:'French', ar:'Arabic' };
 let reqCount = 0;
@@ -1144,9 +1144,11 @@ async function callServer(endpoint, body, outputId, textId, btn) {
   if (txt) txt.innerHTML = '<span style="color:var(--muted)">⏳ Generating…</span>';
   if (btn) { btn.disabled = true; btn._prev = btn.innerHTML; btn.innerHTML = '⏳ Working…'; }
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (TOKEN) headers['Authorization'] = `Bearer ${TOKEN}`;
     const res = await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      headers,
       body: JSON.stringify(body)
     });
     const data = await res.json();
