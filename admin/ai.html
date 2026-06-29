@@ -1663,4 +1663,73 @@ function copyEl(id) {
   navigator.clipboard.writeText(text).then(() => showToast('📋 Copied!'));
 }
 
+// ══ GENERATE & PUBLISH ALERT (زر أحمر) ══
+async function generateAlertAndPublish(btn) {
+  const situation = document.getElementById('alertInput').value.trim();
+  const type      = document.getElementById('alertType').value;
+  const severity  = document.getElementById('alertSeverity').value;
+  const authority = document.getElementById('alertAuthority').value;
+  const lang      = document.getElementById('alertLang').value;
+
+  if (!situation) { showToast('⚠️ Please describe the environmental situation', 'error'); return; }
+
+  btn.disabled = true; const prev = btn.innerHTML; btn.innerHTML = '⏳ Generating…';
+
+  const out = document.getElementById('alertOutput');
+  const txt = document.getElementById('alertOutputText');
+  if (out) out.style.display = 'block';
+  if (txt) txt.innerHTML = '<span style="color:var(--muted)">⏳ Generating alert…</span>';
+
+  try {
+    // Step 1 — توليد التحذير
+    const res1 = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ message: `Write a ${type} in ${LANGS[lang] || 'Arabic'}:
+Situation: ${situation}
+Severity: ${severity}
+${authority ? 'Issuing authority: ' + authority : ''}
+Include: Alert header, situation summary, immediate risks, affected areas, recommended actions, contact info.` })
+    });
+    const d1 = await res1.json();
+    const alertContent = d1.reply || '';
+    if (txt) txt.textContent = alertContent;
+
+    if (!alertContent) throw new Error('No content generated');
+
+    // Step 2 — نشر في DB
+    const sevEmoji = { critical: '🔴', high: '🟠', medium: '🟡', low: '🟢' };
+    const emoji    = sevEmoji[severity] || '🚨';
+    const title    = `${emoji} ${type.replace(/[🚨⚠️📢📣🔴]/g,'').trim()}: ${situation.slice(0, 100)}`;
+    const plain    = alertContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    const res2 = await fetch('/api/articles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        title,
+        content: `<p>${alertContent.replace(/
+/g, '</p><p>')}</p>`,
+        excerpt: plain.slice(0, 250),
+        tag: 'Alert',
+        emoji,
+        lang,
+        status: 'published'
+      })
+    });
+    const d2 = await res2.json();
+    if (!res2.ok) throw new Error(d2.error || 'Publish failed');
+
+    showToast(`✅ Alert published! ID: #${d2.id}`, 'success');
+    if (txt) txt.innerHTML += `<br><br><a href="/article.html?id=${d2.id}" target="_blank" style="color:var(--cyan);font-weight:700">→ View Published Alert #${d2.id}</a>`;
+    bumpUsage();
+
+  } catch(e) {
+    showToast('❌ ' + e.message, 'error');
+    if (txt) txt.textContent = '❌ Error: ' + e.message;
+  }
+
+  btn.disabled = false; btn.innerHTML = prev;
+}
+
 </script>
