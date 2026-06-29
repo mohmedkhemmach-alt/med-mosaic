@@ -56,6 +56,38 @@
     .btn-ai{background:linear-gradient(135deg,var(--teal),var(--cyan));color:var(--deep);font-weight:700;font-size:13px;font-family:inherit;padding:10px 22px;border:none;border-radius:8px;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:8px;}
     .btn-ai:hover{opacity:.85;}
     .btn-ai:disabled{opacity:.5;cursor:wait;}
+
+    /* ── PUBLISH PANEL ── */
+    .publish-panel{margin-top:16px;background:rgba(45,198,83,0.06);border:1px solid rgba(45,198,83,0.2);border-radius:10px;padding:18px;display:none;}
+    .publish-panel.visible{display:block;}
+    .publish-panel-title{font-size:13px;font-weight:700;color:#2dc653;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+    .publish-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+    .publish-excerpt{grid-column:1/-1;}
+    .publish-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn-publish{background:linear-gradient(135deg,#1a8a3a,#2dc653);color:#fff;font-weight:700;font-size:13px;font-family:inherit;padding:10px 22px;border:none;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s;}
+    .btn-publish:hover{opacity:.88;}
+    .btn-publish:disabled{opacity:.5;cursor:wait;}
+    .btn-draft{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:var(--muted);font-weight:600;font-size:13px;font-family:inherit;padding:10px 18px;border-radius:8px;cursor:pointer;transition:all .2s;}
+    .btn-draft:hover{color:var(--text);border-color:rgba(255,255,255,0.3);}
+    .publish-status{font-size:12px;padding:8px 14px;border-radius:8px;display:none;margin-top:10px;}
+    .publish-status.success{background:rgba(45,198,83,0.12);border:1px solid rgba(45,198,83,0.3);color:#2dc653;display:block;}
+    .publish-status.error{background:rgba(231,57,70,0.1);border:1px solid rgba(231,57,70,0.25);color:#f1727d;display:block;}
+
+    /* ── QUICK PUBLISH MODAL ── */
+    .qp-overlay{position:fixed;inset:0;background:rgba(2,11,24,.88);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;}
+    .qp-overlay.open{display:flex;}
+    .qp-modal{background:rgba(6,26,48,.98);border:1px solid rgba(0,201,200,.2);border-radius:16px;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+    .qp-header{padding:20px 24px;border-bottom:1px solid rgba(0,201,200,.1);display:flex;align-items:center;justify-content:space-between;}
+    .qp-title{font-size:15px;font-weight:700;color:var(--white);}
+    .qp-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+    .qp-body{padding:22px 24px;display:flex;flex-direction:column;gap:14px;}
+    .qp-label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;display:block;}
+    .qp-input,.qp-select,.qp-textarea{width:100%;background:rgba(0,201,200,.04);border:1.5px solid rgba(0,201,200,.15);color:var(--white);padding:9px 14px;border-radius:8px;font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;}
+    .qp-input:focus,.qp-select:focus,.qp-textarea:focus{border-color:var(--cyan);}
+    .qp-textarea{resize:vertical;min-height:80px;}
+    .qp-select option{background:var(--navy);}
+    .qp-footer{padding:16px 24px;border-top:1px solid rgba(0,201,200,.08);display:flex;gap:10px;justify-content:flex-end;}
+    .qp-cancel{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--muted);font-weight:600;font-size:13px;font-family:inherit;padding:8px 18px;border-radius:8px;cursor:pointer;}
     .btn-sec{background:rgba(0,201,200,.08);border:1px solid rgba(0,201,200,.2);color:var(--cyan);font-weight:600;font-size:12px;font-family:inherit;padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .2s;}
     .btn-sec:hover{background:rgba(0,201,200,.18);}
     /* output */
@@ -193,6 +225,42 @@ window.addEventListener("DOMContentLoaded",function(){
         <div class="svc-icon">🔍</div><div class="svc-name">SEO Optimizer</div>
         <div class="svc-desc">Meta, slug, keywords + social image picker.</div><div class="svc-tag">SEO</div>
       </div>
+      <div class="service-card" onclick="showTab('factcheck',this)">
+        <div class="svc-icon">✅</div><div class="svc-name">Fact Checker</div>
+        <div class="svc-desc">Verify marine facts, statistics &amp; scientific claims.</div><div class="svc-tag">Verify</div>
+      </div>
+      <div class="service-card" onclick="showTab('newsletter',this)">
+        <div class="svc-icon">📧</div><div class="svc-name">Newsletter Writer</div>
+        <div class="svc-desc">Weekly eco-newsletter from article summaries.</div><div class="svc-tag">Email</div>
+      </div>
+      <div class="service-card" onclick="showTab('social',this)">
+        <div class="svc-icon">📱</div><div class="svc-name">Social Media Pack</div>
+        <div class="svc-desc">Twitter/X, Facebook &amp; LinkedIn posts from articles.</div><div class="svc-tag">Social</div>
+      </div>
+      <div class="service-card" onclick="showTab('qa',this)">
+        <div class="svc-icon">❓</div><div class="svc-name">Q&amp;A Generator</div>
+        <div class="svc-desc">Generate FAQ from any marine article or topic.</div><div class="svc-tag">FAQ</div>
+      </div>
+      <div class="service-card" onclick="showTab('report',this)">
+        <div class="svc-icon">📊</div><div class="svc-name">Eco Report Builder</div>
+        <div class="svc-desc">Structured environmental impact report with data.</div><div class="svc-tag">Report</div>
+      </div>
+      <div class="service-card" onclick="showTab('caption',this)">
+        <div class="svc-icon">🖼️</div><div class="svc-name">Image Caption AI</div>
+        <div class="svc-desc">Generate captions &amp; alt text for marine photos.</div><div class="svc-tag">Caption</div>
+      </div>
+      <div class="service-card" onclick="showTab('rewrite',this)">
+        <div class="svc-icon">✍️</div><div class="svc-name">Article Rewriter</div>
+        <div class="svc-desc">Rewrite &amp; improve existing articles with AI.</div><div class="svc-tag">Rewrite</div>
+      </div>
+      <div class="service-card" onclick="showTab('interview',this)">
+        <div class="svc-icon">🎙️</div><div class="svc-name">Interview Questions</div>
+        <div class="svc-desc">Generate expert interview questions on eco topics.</div><div class="svc-tag">Interview</div>
+      </div>
+      <div class="service-card" onclick="showTab('alert',this)">
+        <div class="svc-icon">🚨</div><div class="svc-name">Eco Alert Generator</div>
+        <div class="svc-desc">Draft urgent environmental alerts &amp; press releases.</div><div class="svc-tag">Alert</div>
+      </div>
     </div>
 
     <!-- ══ TAB 1: ARTICLE GENERATOR ══ -->
@@ -222,10 +290,42 @@ window.addEventListener("DOMContentLoaded",function(){
               <textarea class="form-textarea" id="genContext" style="height:190px" placeholder="Specific details, location, data points..."></textarea>
             </div>
           </div>
-          <button class="btn-ai" onclick="generateArticle(this)">🤖 Generate Article</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+            <button class="btn-ai" onclick="generateArticle(this)">🤖 Generate Article</button>
+            <button class="btn-ai" onclick="generateAndPublish(this)" style="background:linear-gradient(135deg,#1a8a3a,#2dc653)">⚡ Generate &amp; Publish Now</button>
+          </div>
           <div class="ai-output" id="genOutput" style="display:none">
             <button class="copy-btn" onclick="copyEl('genOutputText')">📋 Copy</button>
             <div id="genOutputText"></div>
+          </div>
+
+          <!-- PUBLISH PANEL -->
+          <div class="publish-panel" id="publishPanel">
+            <div class="publish-panel-title">🚀 Ready to Publish</div>
+            <div class="publish-fields">
+              <div>
+                <label class="qp-label">Title</label>
+                <input class="qp-input" id="pubTitle" placeholder="Article title…">
+              </div>
+              <div>
+                <label class="qp-label">Status</label>
+                <select class="qp-select" id="pubStatus">
+                  <option value="published">✅ Publish Now</option>
+                  <option value="pending">⏳ Pending Review</option>
+                  <option value="draft">📝 Save as Draft</option>
+                </select>
+              </div>
+              <div class="publish-excerpt">
+                <label class="qp-label">Excerpt <span style="color:var(--muted);font-weight:400">(auto-generated — edit if needed)</span></label>
+                <textarea class="qp-textarea" id="pubExcerpt" style="min-height:60px"></textarea>
+              </div>
+            </div>
+            <div class="publish-actions">
+              <button class="btn-publish" id="pubBtn" onclick="publishArticle()">🚀 Publish to Site</button>
+              <button class="btn-draft" onclick="publishArticle('draft')">💾 Save as Draft</button>
+              <button class="btn-draft" onclick="document.getElementById('publishPanel').classList.remove('visible')">✕ Cancel</button>
+            </div>
+            <div class="publish-status" id="pubStatus"></div>
           </div>
           <!-- IMAGE EDITOR -->
           <div class="img-editor" id="genImgEditor" style="display:none">
@@ -500,6 +600,343 @@ window.addEventListener("DOMContentLoaded",function(){
       </div>
     </div>
 
+
+    <!-- ══ TAB 9: FACT CHECKER ══ -->
+    <div id="tab-factcheck" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">✅ Marine Fact Checker</div></div>
+        <div class="card-body">
+          <label class="form-label">Claim or Statement to Verify</label>
+          <textarea class="form-textarea" id="factInput" style="min-height:100px" placeholder="e.g. '90% of large fish populations have disappeared since 1950' — paste any marine claim here…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Source Context (optional)</label>
+              <input class="form-input" id="factSource" placeholder="e.g. Reuters, UNEP, scientific study…">
+            </div>
+            <div>
+              <label class="form-label">Response Language</label>
+              <select class="form-select" id="factLang"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select>
+            </div>
+          </div>
+          <button class="btn-ai" onclick="checkFact(this)">✅ Verify Claim</button>
+          <div class="ai-output" id="factOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('factOutputText')">📋 Copy</button>
+            <div id="factOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 10: NEWSLETTER ══ -->
+    <div id="tab-newsletter" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📧 Newsletter Writer</div></div>
+        <div class="card-body">
+          <label class="form-label">This Week's Marine Topics (one per line)</label>
+          <textarea class="form-textarea" id="nlTopics" style="min-height:100px" placeholder="Coral bleaching in Morocco&#10;New marine reserve near Agadir&#10;Microplastic study results…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Newsletter Tone</label>
+              <select class="form-select" id="nlTone">
+                <option>Informative</option><option>Urgent/Alert</option><option>Inspiring</option><option>Scientific</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Language</label>
+              <select class="form-select" id="nlLang"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select>
+            </div>
+          </div>
+          <button class="btn-ai" onclick="writeNewsletter(this)">📧 Generate Newsletter</button>
+          <div class="ai-output" id="nlOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('nlOutputText')">📋 Copy</button>
+            <div id="nlOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 11: SOCIAL MEDIA ══ -->
+    <div id="tab-social" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📱 Social Media Pack Generator</div></div>
+        <div class="card-body">
+          <label class="form-label">Article Title or Topic</label>
+          <input class="form-input" id="socialTopic" placeholder="e.g. Morocco launches new marine reserve near Agadir…">
+          <label class="form-label">Key Message (optional)</label>
+          <textarea class="form-textarea" id="socialContext" style="min-height:70px" placeholder="Core message or data point you want highlighted…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Platforms</label>
+              <select class="form-select" id="socialPlatform">
+                <option value="all">All Platforms</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="facebook">Facebook</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="instagram">Instagram</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Language</label>
+              <select class="form-select" id="socialLang"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select>
+            </div>
+          </div>
+          <button class="btn-ai" onclick="generateSocial(this)">📱 Generate Social Pack</button>
+          <div class="ai-output" id="socialOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('socialOutputText')">📋 Copy</button>
+            <div id="socialOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 12: Q&A ══ -->
+    <div id="tab-qa" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">❓ FAQ / Q&amp;A Generator</div></div>
+        <div class="card-body">
+          <label class="form-label">Article or Topic</label>
+          <textarea class="form-textarea" id="qaInput" style="min-height:100px" placeholder="Paste article text or describe the topic…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Number of Questions</label>
+              <select class="form-select" id="qaCount">
+                <option value="5">5 Questions</option><option value="8" selected>8 Questions</option><option value="10">10 Questions</option><option value="15">15 Questions</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Audience</label>
+              <select class="form-select" id="qaAudience">
+                <option>General public</option><option>Students</option><option>Journalists</option><option>Researchers</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Language</label>
+            <div class="pills-row">
+              <button class="lang-pill active" onclick="setPill('qaLang','en',this)">EN</button>
+              <button class="lang-pill" onclick="setPill('qaLang','fr',this)">FR</button>
+              <button class="lang-pill" onclick="setPill('qaLang','ar',this)">AR</button>
+            </div>
+            <input type="hidden" id="qaLang" value="en">
+          </div>
+          <button class="btn-ai" onclick="generateQA(this)">❓ Generate FAQ</button>
+          <div class="ai-output" id="qaOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('qaOutputText')">📋 Copy</button>
+            <div id="qaOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 13: ECO REPORT ══ -->
+    <div id="tab-report" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">📊 Environmental Impact Report Builder</div></div>
+        <div class="card-body">
+          <label class="form-label">Environmental Problem / Issue</label>
+          <input class="form-input" id="reportTopic" placeholder="e.g. Plastic pollution in Agadir Bay, coral bleaching in Mediterranean…">
+          <div class="row2">
+            <div>
+              <label class="form-label">Geographic Scope</label>
+              <input class="form-input" id="reportScope" placeholder="Morocco coast, Mediterranean, global…">
+            </div>
+            <div>
+              <label class="form-label">Report Type</label>
+              <select class="form-select" id="reportType">
+                <option>Impact Assessment</option><option>Risk Analysis</option>
+                <option>Conservation Status</option><option>Pollution Report</option><option>Biodiversity Review</option>
+              </select>
+            </div>
+          </div>
+          <div class="row2">
+            <div>
+              <label class="form-label">Include Sections</label>
+              <select class="form-select" id="reportSections">
+                <option value="full">Full Report (all sections)</option>
+                <option value="summary">Executive Summary only</option>
+                <option value="data">Data & Statistics focus</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Language</label>
+              <select class="form-select" id="reportLang"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select>
+            </div>
+          </div>
+          <button class="btn-ai" onclick="buildReport(this)">📊 Build Report</button>
+          <div class="ai-output" id="reportOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('reportOutputText')">📋 Copy</button>
+            <div id="reportOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 14: IMAGE CAPTION ══ -->
+    <div id="tab-caption" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🖼️ Image Caption & Alt Text Generator</div></div>
+        <div class="card-body">
+          <label class="form-label">Image Description (what you see in the photo)</label>
+          <textarea class="form-textarea" id="captionInput" style="min-height:90px" placeholder="e.g. Aerial view of Agadir coastline showing brown water near the shore with fishing boats in the distance…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Context / Article Topic</label>
+              <input class="form-input" id="captionContext" placeholder="e.g. plastic pollution article, coral reef story…">
+            </div>
+            <div>
+              <label class="form-label">Caption Style</label>
+              <select class="form-select" id="captionStyle">
+                <option>Journalistic (short, factual)</option>
+                <option>Descriptive (detailed)</option>
+                <option>Social Media (engaging)</option>
+                <option>Scientific (technical)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Output Languages</label>
+            <div class="pills-row">
+              <button class="lang-pill active" onclick="setPill('captionLang','en',this)">EN</button>
+              <button class="lang-pill" onclick="setPill('captionLang','fr',this)">FR</button>
+              <button class="lang-pill" onclick="setPill('captionLang','ar',this)">AR</button>
+              <button class="lang-pill" onclick="setPill('captionLang','all',this)">All 3</button>
+            </div>
+            <input type="hidden" id="captionLang" value="en">
+          </div>
+          <button class="btn-ai" onclick="generateCaption(this)">🖼️ Generate Caption</button>
+          <div class="ai-output" id="captionOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('captionOutputText')">📋 Copy</button>
+            <div id="captionOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 15: ARTICLE REWRITER ══ -->
+    <div id="tab-rewrite" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">✍️ Article Rewriter & Improver</div></div>
+        <div class="card-body">
+          <label class="form-label">Original Article Text</label>
+          <textarea class="form-textarea" id="rewriteInput" style="min-height:140px" placeholder="Paste the article you want to rewrite or improve…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Rewrite Mode</label>
+              <select class="form-select" id="rewriteMode">
+                <option value="improve">✨ Improve Quality</option>
+                <option value="simplify">📖 Simplify Language</option>
+                <option value="formalize">🎩 Make More Formal</option>
+                <option value="shorten">✂️ Make Shorter (50%)</option>
+                <option value="expand">📝 Expand with Details</option>
+                <option value="journalistic">📰 Journalistic Style</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Output Language</label>
+              <select class="form-select" id="rewriteLang"><option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option></select>
+            </div>
+          </div>
+          <button class="btn-ai" onclick="rewriteArticle(this)">✍️ Rewrite Article</button>
+          <div class="ai-output" id="rewriteOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('rewriteOutputText')">📋 Copy</button>
+            <div id="rewriteOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 16: INTERVIEW QUESTIONS ══ -->
+    <div id="tab-interview" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🎙️ Interview Question Generator</div></div>
+        <div class="card-body">
+          <label class="form-label">Expert / Interviewee Profile</label>
+          <input class="form-input" id="interviewExpert" placeholder="e.g. Marine biologist at INRH Agadir, fisherman, environmental activist…">
+          <label class="form-label">Interview Topic</label>
+          <input class="form-input" id="interviewTopic" placeholder="e.g. Impact of plastic on Moroccan fishing industry…">
+          <div class="row2">
+            <div>
+              <label class="form-label">Interview Type</label>
+              <select class="form-select" id="interviewType">
+                <option>In-depth Feature</option><option>Breaking News</option>
+                <option>Scientific</option><option>Community Voice</option><option>Policy Discussion</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Number of Questions</label>
+              <select class="form-select" id="interviewCount">
+                <option value="5">5 Questions</option><option value="8" selected>8 Questions</option><option value="12">12 Questions</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Language</label>
+            <div class="pills-row">
+              <button class="lang-pill active" onclick="setPill('interviewLang','en',this)">EN</button>
+              <button class="lang-pill" onclick="setPill('interviewLang','fr',this)">FR</button>
+              <button class="lang-pill" onclick="setPill('interviewLang','ar',this)">AR</button>
+            </div>
+            <input type="hidden" id="interviewLang" value="en">
+          </div>
+          <button class="btn-ai" onclick="generateInterview(this)">🎙️ Generate Questions</button>
+          <div class="ai-output" id="interviewOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('interviewOutputText')">📋 Copy</button>
+            <div id="interviewOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB 17: ECO ALERT ══ -->
+    <div id="tab-alert" style="display:none">
+      <div class="card">
+        <div class="card-header"><div class="card-title">🚨 Environmental Alert & Press Release Generator</div></div>
+        <div class="card-body">
+          <label class="form-label">Environmental Emergency / Situation</label>
+          <textarea class="form-textarea" id="alertInput" style="min-height:90px" placeholder="e.g. Oil spill detected near Cap Ghir, unusual fish mortality in Safi Bay, illegal dumping near marine reserve…"></textarea>
+          <div class="row2">
+            <div>
+              <label class="form-label">Alert Type</label>
+              <select class="form-select" id="alertType">
+                <option>🚨 Emergency Alert</option>
+                <option>⚠️ Environmental Warning</option>
+                <option>📢 Press Release</option>
+                <option>📣 Public Notice</option>
+                <option>🔴 Urgent Action Call</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label">Severity Level</label>
+              <select class="form-select" id="alertSeverity">
+                <option value="critical">🔴 Critical</option>
+                <option value="high">🟠 High</option>
+                <option value="medium">🟡 Medium</option>
+                <option value="low">🟢 Low / Informational</option>
+              </select>
+            </div>
+          </div>
+          <div class="row2">
+            <div>
+              <label class="form-label">Issuing Authority (optional)</label>
+              <input class="form-input" id="alertAuthority" placeholder="e.g. INRH, Ministry of Environment, Med Mosaic…">
+            </div>
+            <div>
+              <label class="form-label">Language</label>
+              <select class="form-select" id="alertLang"><option value="ar">العربية</option><option value="fr">Français</option><option value="en">English</option></select>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn-ai" onclick="generateAlert(this)">🚨 Generate Alert</button>
+            <button class="btn-ai" onclick="generateAlertAndPublish(this)" style="background:linear-gradient(135deg,#8a1a1a,#dc2626)">⚡ Generate &amp; Publish Alert</button>
+          </div>
+          <div class="ai-output" id="alertOutput" style="display:none">
+            <button class="copy-btn" onclick="copyEl('alertOutputText')">📋 Copy</button>
+            <div id="alertOutputText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- API USAGE -->
     <div class="card">
       <div class="card-header"><div class="card-title">📊 API Usage — This Session</div></div>
@@ -529,7 +966,7 @@ const LANGS = {en:"English", fr:"French", ar:"Arabic"};
 let reqCount = 0;
 
 // ══════ TABS ══════
-const ALL_TABS = ['generate','latestnews','translate','summarize','tags','breaking','moderate','seo'];
+const ALL_TABS = ['generate','latestnews','translate','summarize','tags','breaking','moderate','seo','factcheck','newsletter','social','qa','report','caption','rewrite','interview','alert'];
 function showTab(name, card){
   ALL_TABS.forEach(t=>{ const el=document.getElementById('tab-'+t); if(el) el.style.display=t===name?'block':'none'; });
   document.querySelectorAll('.service-card').forEach(c=>c.classList.remove('active'));
@@ -842,6 +1279,462 @@ function copyEl(id){
     if(orig && orig.classList.contains('copy-btn')){ orig.textContent='✅ Copied!'; setTimeout(()=>orig.textContent='📋 Copy',1500); }
   });
 }
+
+
+
+// ══════ NEW TOOLS JS ══════
+
+// ── FACT CHECKER ──
+function checkFact(btn){
+  const claim = document.getElementById('factInput').value;
+  const src   = document.getElementById('factSource').value;
+  const lang  = document.getElementById('factLang').value;
+  const langs = {en:'English',fr:'French',ar:'Arabic'};
+  callServer('/api/ai/chat',{message:`You are a marine science fact-checker. Analyze this claim:
+"${claim}"
+${src?'Source context: '+src:''}
+Respond in ${langs[lang]} with:
+VERDICT: [TRUE / PARTIALLY TRUE / UNVERIFIED / FALSE / MISLEADING]
+EXPLANATION: [2-3 sentences explaining why]
+SCIENTIFIC BASIS: [relevant data or studies]
+CONFIDENCE: [High/Medium/Low]`},'factOutput','factOutputText',btn);
+}
+
+// ── NEWSLETTER ──
+function writeNewsletter(btn){
+  const topics = document.getElementById('nlTopics').value;
+  const tone   = document.getElementById('nlTone').value;
+  const lang   = document.getElementById('nlLang').value;
+  const langs  = {en:'English',fr:'French',ar:'Arabic'};
+  callServer('/api/ai/chat',{message:`Write a professional marine environment weekly newsletter in ${langs[lang]}.
+Tone: ${tone}
+This week's topics:
+${topics}
+Include: Subject line, greeting, 3-4 short sections (one per topic), call-to-action, signature "Med Mosaic Team".
+Format with clear sections.`},'nlOutput','nlOutputText',btn);
+}
+
+// ── SOCIAL MEDIA ──
+function generateSocial(btn){
+  const topic    = document.getElementById('socialTopic').value;
+  const context  = document.getElementById('socialContext').value;
+  const platform = document.getElementById('socialPlatform').value;
+  const lang     = document.getElementById('socialLang').value;
+  const langs    = {en:'English',fr:'French',ar:'Arabic'};
+  const platMap  = {
+    all: 'Twitter/X (max 280 chars), Facebook (engaging), LinkedIn (professional), Instagram (visual + hashtags)',
+    twitter:'Twitter/X (max 280 chars with hashtags)',
+    facebook:'Facebook post (engaging, 2-3 paragraphs)',
+    linkedin:'LinkedIn post (professional tone)',
+    instagram:'Instagram caption (visual storytelling + 10 hashtags)'
+  };
+  callServer('/api/ai/chat',{message:`Generate social media content in ${langs[lang]} for: "${topic}"
+${context?'Context: '+context:''}
+Create posts for: ${platMap[platform]}
+Include relevant marine/eco hashtags. Make each post engaging and shareable.
+Label each platform clearly.`},'socialOutput','socialOutputText',btn);
+}
+
+// ── Q&A ──
+function generateQA(btn){
+  const input    = document.getElementById('qaInput').value;
+  const count    = document.getElementById('qaCount').value;
+  const audience = document.getElementById('qaAudience').value;
+  const lang     = document.getElementById('qaLang').value;
+  const langs    = {en:'English',fr:'French',ar:'Arabic'};
+  callServer('/api/ai/chat',{message:`Generate ${count} FAQ questions and detailed answers in ${langs[lang]} about:
+${input}
+Target audience: ${audience}
+Format each as:
+Q: [question]
+A: [detailed answer, 2-3 sentences]
+Make questions progressively deeper. Focus on marine environment aspects.`},'qaOutput','qaOutputText',btn);
+}
+
+// ── ECO REPORT ──
+function buildReport(btn){
+  const topic    = document.getElementById('reportTopic').value;
+  const scope    = document.getElementById('reportScope').value;
+  const type     = document.getElementById('reportType').value;
+  const sections = document.getElementById('reportSections').value;
+  const lang     = document.getElementById('reportLang').value;
+  const langs    = {en:'English',fr:'French',ar:'Arabic'};
+  const sectMap  = {
+    full: 'Executive Summary, Current Situation, Key Data & Statistics, Environmental Impact, Root Causes, Consequences, Recommendations, Conclusion',
+    summary: 'Executive Summary with key findings and 3 main recommendations',
+    data: 'Data Section with statistics, measurements, trends and scientific figures'
+  };
+  callServer('/api/ai/chat',{message:`Write a structured ${type} report in ${langs[lang]} about:
+Topic: ${topic}
+Geographic scope: ${scope||'Morocco / Mediterranean'}
+Include these sections: ${sectMap[sections]}
+Use professional report format with section headers. Include realistic data estimates where appropriate.`},'reportOutput','reportOutputText',btn);
+}
+
+// ── IMAGE CAPTION ──
+function generateCaption(btn){
+  const desc    = document.getElementById('captionInput').value;
+  const ctx     = document.getElementById('captionContext').value;
+  const style   = document.getElementById('captionStyle').value;
+  const lang    = document.getElementById('captionLang').value;
+  let prompt = '';
+  if(lang==='all'){
+    prompt = `Generate captions in Arabic, French AND English for this marine image:
+Description: ${desc}
+${ctx?'Article context: '+ctx:''}
+Style: ${style}
+For each language provide:
+- Caption (1-2 sentences)
+- Alt text (SEO-friendly, under 125 chars)
+Label each language clearly.`;
+  } else {
+    const langs={en:'English',fr:'French',ar:'Arabic'};
+    prompt = `Generate a ${style} caption in ${langs[lang]} for this marine image:
+Description: ${desc}
+${ctx?'Article context: '+ctx:''}
+Provide:
+CAPTION: [1-2 sentences]
+ALT TEXT: [SEO-friendly description under 125 chars]`;
+  }
+  callServer('/api/ai/chat',{message:prompt},'captionOutput','captionOutputText',btn);
+}
+
+// ── ARTICLE REWRITER ──
+function rewriteArticle(btn){
+  const input = document.getElementById('rewriteInput').value;
+  const mode  = document.getElementById('rewriteMode').value;
+  const lang  = document.getElementById('rewriteLang').value;
+  const langs = {en:'English',fr:'French',ar:'Arabic'};
+  const modeMap = {
+    improve: 'Improve the quality, clarity and flow while keeping the same length and information',
+    simplify: 'Simplify the language so it is accessible to a general audience (B2 level)',
+    formalize: 'Make the tone more formal and professional for academic/official use',
+    shorten: 'Condense to approximately 50% of the original length keeping the key facts',
+    expand: 'Expand with additional context, data, and background information (increase by ~50%)',
+    journalistic: 'Rewrite in proper journalistic style: inverted pyramid, short paragraphs, active voice'
+  };
+  callServer('/api/ai/chat',{message:`Rewrite the following marine environment article in ${langs[lang]}.
+Mode: ${modeMap[mode]}
+Return ONLY the rewritten article, no preamble.
+
+ORIGINAL ARTICLE:
+${input}`},'rewriteOutput','rewriteOutputText',btn);
+}
+
+// ── INTERVIEW QUESTIONS ──
+function generateInterview(btn){
+  const expert = document.getElementById('interviewExpert').value;
+  const topic  = document.getElementById('interviewTopic').value;
+  const type   = document.getElementById('interviewType').value;
+  const count  = document.getElementById('interviewCount').value;
+  const lang   = document.getElementById('interviewLang').value;
+  const langs  = {en:'English',fr:'French',ar:'Arabic'};
+  callServer('/api/ai/chat',{message:`Generate ${count} ${type} interview questions in ${langs[lang]}.
+Interviewee: ${expert}
+Topic: ${topic}
+Questions should be open-ended, progressively deeper, and draw out expert insights.
+Include 2 follow-up probes after key questions.
+Number each question. Make them specific to marine environment journalism.`},'interviewOutput','interviewOutputText',btn);
+}
+
+// ── ECO ALERT ──
+function generateAlert(btn){
+  const situation = document.getElementById('alertInput').value;
+  const type      = document.getElementById('alertType').value;
+  const severity  = document.getElementById('alertSeverity').value;
+  const authority = document.getElementById('alertAuthority').value;
+  const lang      = document.getElementById('alertLang').value;
+  const langs     = {en:'English',fr:'French',ar:'Arabic'};
+  callServer('/api/ai/chat',{message:`Write a ${type} in ${langs[lang]} for this environmental situation:
+${situation}
+Severity: ${severity}
+${authority?'Issuing authority: '+authority:''}
+Include: Alert header with severity emoji, situation summary, immediate risks, affected areas, recommended actions, contact/reporting info.
+Use official, urgent tone appropriate for public communication.`},'alertOutput','alertOutputText',btn);
+}
+
+async function generateAlertAndPublish(btn){
+  const situation = document.getElementById('alertInput').value;
+  if(!situation){alert('Please describe the environmental situation');return;}
+  const type     = document.getElementById('alertType').value;
+  const severity = document.getElementById('alertSeverity').value;
+  const lang     = document.getElementById('alertLang').value;
+  const langs    = {en:'English',fr:'French',ar:'Arabic'};
+  btn.disabled=true; const prev=btn.innerHTML; btn.innerHTML='⏳ Generating…';
+  try{
+    const res = await fetch('/api/ai/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body:JSON.stringify({topic:`${type}: ${situation}`,lang,tone:'alert'})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    const content = data.content;
+    const plain   = content.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    const sevEmoji= {critical:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
+    const title   = `${sevEmoji[severity]||'🔴'} ${type.replace(/[🚨⚠️📢📣🔴]/g,'').trim()}: ${situation.slice(0,80)}`;
+    const r2 = await fetch('/api/articles',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body:JSON.stringify({title,content,excerpt:plain.slice(0,250),tag:'Alert',emoji:sevEmoji[severity]||'🚨',lang,status:'published'})
+    });
+    const d2 = await r2.json();
+    if(!r2.ok) throw new Error(d2.error);
+    document.getElementById('alertOutputText').innerHTML = content;
+    document.getElementById('alertOutput').style.display='block';
+    alert('✅ Alert published! ID: #'+d2.id);
+    bumpUsage();
+  }catch(e){alert('Error: '+e.message);}
+  btn.disabled=false; btn.innerHTML=prev;
+}
+
+// ══════ PUBLISH FUNCTIONS ══════
+
+// متغير لحفظ المحتوى المولّد
+let _generatedContent = '';
+let _generatedTopic   = '';
+
+// بعد توليد المقال — نفعّل publish panel
+const _origGenArticle = generateArticle;
+function generateArticle(btn) {
+  _generatedTopic = document.getElementById('genTopic').value;
+  const orig = callServer;
+  // override مؤقت لالتقاط النتيجة
+  window._lastGenContent = null;
+  _origGenArticle(btn);
+  // نفعّل الـ panel بعد التوليد عبر MutationObserver
+  const txt = document.getElementById('genOutputText');
+  const obs = new MutationObserver(() => {
+    if (txt.textContent.length > 50) {
+      _generatedContent = txt.textContent;
+      showPublishPanel();
+      obs.disconnect();
+    }
+  });
+  obs.observe(txt, { childList: true, subtree: true, characterData: true });
+}
+
+function showPublishPanel() {
+  const panel = document.getElementById('publishPanel');
+  panel.classList.add('visible');
+  // توليد عنوان تلقائي من أول سطر
+  const lines = _generatedContent.split('\n').filter(l => l.trim());
+  const firstLine = lines[0]?.replace(/<[^>]+>/g, '').replace(/^#+\s*/, '').trim() || _generatedTopic;
+  document.getElementById('pubTitle').value = firstLine.slice(0, 200);
+  // excerpt من الجملتين الأوليين
+  const plainText = _generatedContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  document.getElementById('pubExcerpt').value = plainText.slice(0, 280);
+  // scroll للـ panel
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('pubStatus').className = 'publish-status';
+  document.getElementById('pubStatus').textContent = '';
+}
+
+async function publishArticle(forceStatus) {
+  const title   = document.getElementById('pubTitle').value.trim();
+  const excerpt = document.getElementById('pubExcerpt').value.trim();
+  const status  = forceStatus || document.getElementById('pubStatus')?.value || 'published';
+  const tag     = document.getElementById('genCategory').value;
+  const lang    = document.getElementById('genLang').value;
+  const emoji   = '🌊';
+
+  if (!title) { alert('Please enter a title'); return; }
+  if (!_generatedContent) { alert('No content to publish'); return; }
+
+  const btn = document.getElementById('pubBtn');
+  btn.disabled = true; btn.textContent = '⏳ Publishing…';
+
+  const statusEl = document.getElementById('pubStatus');
+  statusEl.className = 'publish-status';
+
+  try {
+    const res = await fetch('/api/articles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ title, content: _generatedContent, excerpt, tag, emoji, lang, status })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Server error');
+
+    statusEl.className = 'publish-status success';
+    statusEl.textContent = status === 'published'
+      ? `✅ Article published! ID: #${data.id} — visible on the site now.`
+      : `💾 Saved as ${status}. ID: #${data.id}`;
+    btn.textContent = '✅ Published!';
+    bumpUsage();
+
+    // رابط المقال
+    if (status === 'published') {
+      setTimeout(() => {
+        statusEl.innerHTML += ` <a href="/article.html?id=${data.id}" target="_blank" style="color:var(--cyan);font-weight:700">→ View Article</a>`;
+      }, 500);
+    }
+  } catch(e) {
+    statusEl.className = 'publish-status error';
+    statusEl.textContent = '❌ Error: ' + e.message;
+    btn.textContent = '🚀 Publish to Site';
+  }
+  btn.disabled = false;
+}
+
+// ══ GENERATE & PUBLISH (modal) ══
+function generateAndPublish(btn) {
+  document.getElementById('qpOverlay').classList.add('open');
+  document.getElementById('qpTopic').focus();
+}
+
+function closeQP() {
+  document.getElementById('qpOverlay').classList.remove('open');
+  document.getElementById('qpProgress').style.display = 'none';
+  document.getElementById('qpBar').style.width = '0%';
+  const btn = document.getElementById('qpBtn');
+  btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
+}
+
+async function runGenerateAndPublish() {
+  const topic    = document.getElementById('qpTopic').value.trim();
+  const tone     = document.getElementById('qpTone').value;
+  const category = document.getElementById('qpCategory').value;
+  const lang     = document.getElementById('qpLang').value;
+  const context  = document.getElementById('qpContext').value.trim();
+  const status   = document.getElementById('qpStatus').value;
+
+  if (!topic) { document.getElementById('qpTopic').focus(); return; }
+
+  const btn = document.getElementById('qpBtn');
+  btn.disabled = true; btn.textContent = '⏳ Working…';
+
+  const progress = document.getElementById('qpProgress');
+  const bar      = document.getElementById('qpBar');
+  const pText    = document.getElementById('qpProgressText');
+  progress.style.display = 'block';
+
+  // Step 1 — توليد المقال
+  pText.textContent = '🤖 Generating article with AI…'; bar.style.width = '20%';
+  let content = '';
+  try {
+    const res = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({ topic: topic + (context ? ' — ' + context : '') + ' (' + category + ')', lang, tone })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    content = data.content;
+    bar.style.width = '55%';
+  } catch(e) {
+    pText.textContent = '❌ Generation failed: ' + e.message;
+    btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
+    return;
+  }
+
+  // Step 2 — توليد excerpt تلقائي
+  pText.textContent = '✍️ Extracting summary…'; bar.style.width = '70%';
+  const plainText = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const excerpt   = plainText.slice(0, 280);
+
+  // Step 3 — استخراج العنوان
+  const titleMatch = content.match(/<h[12][^>]*>(.*?)<\/h[12]>/i);
+  const autoTitle  = (titleMatch?.[1] || plainText.slice(0, 120)).replace(/<[^>]+>/g, '').trim();
+
+  // Step 4 — نشر في DB
+  pText.textContent = '🚀 Publishing to database…'; bar.style.width = '88%';
+  try {
+    const res = await fetch('/api/articles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify({
+        title: autoTitle,
+        content,
+        excerpt,
+        tag: category,
+        emoji: '🌊',
+        lang,
+        status
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Publish failed');
+
+    bar.style.width = '100%';
+    pText.innerHTML = status === 'published'
+      ? `✅ Article published! <a href="/article.html?id=${data.id}" target="_blank" style="color:#2dc653;font-weight:700">→ View on Site</a>`
+      : `💾 Saved as ${status} (ID: #${data.id})`;
+
+    bumpUsage();
+    setTimeout(closeQP, 3000);
+  } catch(e) {
+    pText.textContent = '❌ Publish failed: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '⚡ Generate & Publish';
+}
+
 </script>
+<!-- ══ QUICK PUBLISH MODAL ══ -->
+<div class="qp-overlay" id="qpOverlay" onclick="if(event.target===this)closeQP()">
+  <div class="qp-modal">
+    <div class="qp-header">
+      <div class="qp-title">⚡ Generate &amp; Publish Article</div>
+      <button class="qp-close" onclick="closeQP()">×</button>
+    </div>
+    <div class="qp-body">
+      <div>
+        <label class="qp-label">Environmental Problem / Topic <span style="color:#e73946">*</span></label>
+        <input class="qp-input" id="qpTopic" placeholder="e.g. Microplastics in Agadir bay, coral bleaching, sea level rise…">
+      </div>
+      <div>
+        <label class="qp-label">Analysis Depth</label>
+        <select class="qp-select" id="qpTone">
+          <option value="investigative">🔍 Investigative Analysis</option>
+          <option value="scientific">🔬 Scientific Report</option>
+          <option value="alert" selected>🚨 Environmental Alert</option>
+          <option value="solution">💡 Solution-Focused</option>
+          <option value="informative">📰 News Report</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="qp-label">Category</label>
+          <select class="qp-select" id="qpCategory">
+            <option>Pollution</option><option>Climate</option><option>Marine Ecology</option>
+            <option>Conservation</option><option>Research</option><option>Biodiversity</option>
+          </select>
+        </div>
+        <div>
+          <label class="qp-label">Language</label>
+          <select class="qp-select" id="qpLang">
+            <option value="ar">🇲🇦 العربية</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="en" selected>🇬🇧 English</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="qp-label">Additional Context <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <textarea class="qp-textarea" id="qpContext" placeholder="Specific location, data, sources, recent events…"></textarea>
+      </div>
+      <div>
+        <label class="qp-label">Publish Status</label>
+        <select class="qp-select" id="qpStatus">
+          <option value="published">✅ Publish Immediately</option>
+          <option value="pending">⏳ Send for Review</option>
+          <option value="draft">📝 Save as Draft</option>
+        </select>
+      </div>
+    </div>
+    <div class="qp-footer">
+      <button class="qp-cancel" onclick="closeQP()">Cancel</button>
+      <button class="btn-publish" id="qpBtn" onclick="runGenerateAndPublish()">⚡ Generate &amp; Publish</button>
+    </div>
+    <!-- progress -->
+    <div id="qpProgress" style="display:none;padding:16px 24px;border-top:1px solid rgba(0,201,200,.08)">
+      <div style="font-size:13px;color:var(--cyan);margin-bottom:8px" id="qpProgressText">⏳ Generating article…</div>
+      <div style="height:4px;background:rgba(0,201,200,.1);border-radius:2px;overflow:hidden">
+        <div id="qpBar" style="height:100%;background:var(--cyan);width:0%;transition:width .4s;border-radius:2px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
