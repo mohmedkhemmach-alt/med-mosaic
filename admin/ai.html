@@ -72,22 +72,8 @@
     .pub-status{padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-top:8px;}
     .pub-status.success{background:rgba(0,201,100,.15);color:#00c964;border:1px solid rgba(0,201,100,.3);}
     .pub-status.error{background:rgba(255,80,80,.15);color:#ff5050;border:1px solid rgba(255,80,80,.3);}
-    .img-editor{margin-top:16px;padding:16px;background:rgba(2,11,24,.4);border:1px solid rgba(0,201,200,.15);border-radius:10px;}
-    .img-editor-title{font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-    .img-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
-    .img-card{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;border:2px solid transparent;transition:all .2s;background:rgba(0,0,0,.3);}
-    .img-card:hover{border-color:var(--teal);transform:scale(1.02);}
-    .img-card.selected{border-color:#00c964;box-shadow:0 0 12px rgba(0,201,100,.3);}
-    .img-card img{width:100%;height:100%;object-fit:cover;display:block;}
-    .img-card-overlay{position:absolute;inset:0;background:rgba(2,11,24,.6);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px;flex-direction:column;}
-    .img-card:hover .img-card-overlay{opacity:1;}
-    .img-card-overlay span{font-size:11px;color:#fff;font-weight:600;}
-    .img-use-btn{padding:4px 12px;border-radius:6px;border:none;background:var(--teal);color:#000;font-size:11px;font-weight:700;cursor:pointer;}
-    .img-loading{display:flex;align-items:center;justify-content:center;height:80px;color:rgba(0,201,200,.6);font-size:13px;}
-    .img-search-bar{display:flex;gap:8px;margin-bottom:10px;}
-    .img-search-bar input{flex:1;padding:7px 12px;background:rgba(2,11,24,.6);border:1px solid rgba(0,201,200,.2);border-radius:7px;color:#e2eaf4;font-size:12px;font-family:Cairo,sans-serif;}
-    .img-search-bar button{padding:7px 14px;border-radius:7px;border:none;background:rgba(0,201,200,.15);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;}
-    .cover-preview{width:100%;height:140px;object-fit:cover;border-radius:8px;margin-top:8px;border:1px solid rgba(0,201,200,.2);display:none;}
+    .img-editor{margin-top:12px;padding:14px;background:rgba(2,11,24,.4);border:1px solid rgba(0,201,200,.1);border-radius:10px;}
+    .img-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
     .img-slot{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;border:2px solid transparent;transition:border-color .2s;}
     .img-slot:hover,.img-slot.selected{border-color:var(--teal);}
     .img-slot img{width:100%;height:100%;object-fit:cover;}
@@ -245,23 +231,6 @@
             <button class="copy-btn" onclick="copyEl('genOutputText')">📋 Copy</button>
             <div id="genOutputText" class="ai-output-text"></div>
           </div>
-
-          <!-- IMAGE GALLERY -->
-          <div class="img-editor" id="genImgSection" style="display:none">
-            <div class="img-editor-title">🖼️ Related Images — Select a cover photo</div>
-            <div class="img-search-bar">
-              <input id="imgSearchKw" placeholder="Search images..." />
-              <button onclick="searchImages()">🔍 Search</button>
-              <button onclick="refreshImages()" style="background:rgba(0,100,200,.15);color:#6ab0ff">🔄 Refresh</button>
-            </div>
-            <div id="imgGrid" class="img-grid">
-              <div class="img-loading">⏳ Loading images…</div>
-            </div>
-            <div style="margin-top:10px;font-size:11px;color:rgba(226,234,244,.3)">
-              Click an image to set it as cover • Images from Unsplash (free)
-            </div>
-          </div>
-
           <!-- Publish Panel -->
           <div class="publish-panel" id="publishPanel">
             <h3>🚀 Ready to Publish</h3>
@@ -290,8 +259,7 @@
             <label class="form-label">Excerpt</label>
             <textarea class="form-textarea" id="pubExcerpt" style="height:70px" placeholder="Short summary..."></textarea>
             <label class="form-label">Cover Image URL</label>
-            <input class="form-input" id="pubCover" placeholder="https://..." oninput="previewCover(this.value)">
-            <img id="coverPreview" class="cover-preview" src="" alt="preview">
+            <input class="form-input" id="pubCover" placeholder="https://...">
             <div style="margin-top:16px;display:flex;gap:10px">
               <button class="btn-pub" onclick="publishArticle(this)">🚀 Publish to Site</button>
               <button class="btn-sec" onclick="document.getElementById('publishPanel').classList.remove('visible')">✕ Cancel</button>
@@ -772,123 +740,6 @@ function bumpUsage() {
   if (el) el.textContent = reqCount;
 }
 
-// ── IMAGE SEARCH ──
-// Uses Unsplash Source API (free, no key needed) + Picsum for fallback
-var _selectedImgUrl = '';
-var _currentKeyword = '';
-
-function buildImgKeyword(topic) {
-  // Extract marine-relevant keywords
-  var words = topic.toLowerCase();
-  if (words.includes('coral') || words.includes('reef')) return 'coral reef ocean';
-  if (words.includes('plastic') || words.includes('pollution')) return 'ocean pollution plastic';
-  if (words.includes('whale') || words.includes('dolphin')) return 'whale dolphin ocean';
-  if (words.includes('fish') || words.includes('marine')) return 'marine fish ocean';
-  if (words.includes('climate') || words.includes('temperature')) return 'ocean climate sea';
-  if (words.includes('beach') || words.includes('coast')) return 'beach coast morocco';
-  if (words.includes('algae') || words.includes('seaweed')) return 'seaweed algae ocean';
-  if (words.includes('shark')) return 'shark ocean underwater';
-  if (words.includes('turtle')) return 'sea turtle ocean';
-  if (words.includes('mangrove')) return 'mangrove coast';
-  // Default: use first 2 words + ocean
-  var parts = topic.split(' ').slice(0,2).join(' ');
-  return parts + ' ocean';
-}
-
-function getUnsplashImages(keyword, count) {
-  // Unsplash Source API - free, no key needed
-  var images = [];
-  var seeds = ['marine1','eco2','ocean3','sea4','coast5','fish6','reef7','water8'];
-  for (var i = 0; i < count; i++) {
-    var w = 800; var h = 500;
-    // Unsplash with specific keyword
-    images.push({
-      url: 'https://source.unsplash.com/800x500/?' + encodeURIComponent(keyword) + '&sig=' + (Date.now() + i),
-      thumb: 'https://source.unsplash.com/400x250/?' + encodeURIComponent(keyword) + '&sig=' + (Date.now() + i),
-      alt: keyword + ' ' + (i+1),
-      source: 'Unsplash'
-    });
-  }
-  return images;
-}
-
-function renderImageGrid(keyword) {
-  _currentKeyword = keyword;
-  var grid = document.getElementById('imgGrid');
-  if (!grid) return;
-  
-  // Show loading
-  grid.innerHTML = '<div class="img-loading">⏳ Loading images for "' + keyword + '"…</div>';
-  
-  // Generate image URLs from Unsplash (free API)
-  var images = [];
-  var queries = [keyword, keyword + ' underwater', keyword + ' nature', 'ocean ' + keyword, keyword + ' morocco', 'sea ' + keyword, 'marine ' + keyword, 'environment ' + keyword];
-  
-  for (var i = 0; i < 8; i++) {
-    var q = queries[i % queries.length];
-    var ts = Date.now() + i * 1000;
-    images.push({
-      url: 'https://source.unsplash.com/800x500/?' + encodeURIComponent(q) + '&t=' + ts,
-      alt: q
-    });
-  }
-  
-  grid.innerHTML = images.map(function(img, i) {
-    return '<div class="img-card" id="imgCard' + i + '" onclick="selectImage('' + img.url + '',' + i + ')">' +
-      '<img src="' + img.url + '" alt="' + img.alt + '" loading="lazy" onerror="this.src='https://picsum.photos/seed/' + (i + Date.now()) + '/800/500'">' +
-      '<div class="img-card-overlay">' +
-        '<span>Click to use as cover</span>' +
-        '<button class="img-use-btn" onclick="event.stopPropagation();selectImage('' + img.url + '',' + i + ')">✅ Use</button>' +
-      '</div>' +
-    '</div>';
-  }).join('');
-}
-
-function selectImage(url, idx) {
-  _selectedImgUrl = url;
-  // Update all cards
-  document.querySelectorAll('.img-card').forEach(function(c) { c.classList.remove('selected'); });
-  var card = document.getElementById('imgCard' + idx);
-  if (card) card.classList.add('selected');
-  // Set in publish panel
-  var pubCover = document.getElementById('pubCover');
-  if (pubCover) { pubCover.value = url; previewCover(url); }
-  showToast('✅ Image selected as cover!');
-}
-
-function searchImages() {
-  var kw = document.getElementById('imgSearchKw').value.trim();
-  if (!kw) return;
-  renderImageGrid(kw);
-}
-
-function refreshImages() {
-  var kw = document.getElementById('imgSearchKw').value.trim() || _currentKeyword;
-  if (kw) renderImageGrid(kw + ' ' + Date.now());
-}
-
-function showImageGallery(topic) {
-  var section = document.getElementById('genImgSection');
-  if (!section) return;
-  section.style.display = 'block';
-  var kw = buildImgKeyword(topic);
-  document.getElementById('imgSearchKw').value = kw;
-  renderImageGrid(kw);
-  section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function previewCover(url) {
-  var prev = document.getElementById('coverPreview');
-  if (!prev) return;
-  if (url && url.startsWith('http')) {
-    prev.src = url;
-    prev.style.display = 'block';
-    prev.onerror = function() { prev.style.display = 'none'; };
-  } else {
-    prev.style.display = 'none';
-  }
-}
-
 // ── COPY ──
 function copyEl(id) {
   var el = document.getElementById(id);
@@ -924,7 +775,6 @@ async function generateArticle(btn) {
   if (content && content.length > 50) {
     _generatedContent = document.getElementById('genOutputText').innerHTML;
     _generatedTopic = topic;
-    showImageGallery(topic);
     showPublishPanel(topic, cat, lang);
   }
 }
@@ -952,7 +802,6 @@ async function quickPublish(btn) {
     document.getElementById('genOutput').style.display = 'block';
     document.getElementById('genOutputText').innerHTML = content;
     bumpUsage();
-    showImageGallery(topic);
 
     // Auto publish
     var plain = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
