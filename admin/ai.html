@@ -219,6 +219,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="lnLang" value="en">
         <button class="btn" onclick="ai('Write a '+getId('lnType')+' in '+L(getId('lnLang'))+' about: &quot;'+getId('lnTopic')+'&quot;. Include headline (H2) and 2-3 paragraphs.','lnOut','lnOutText',this)">📡 Generate</button>
         <div class="out" id="lnOut"><button class="copy-btn" onclick="cp('lnOutText')">📋</button><div id="lnOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_lnOut" style="display:none;margin-top:8px" onclick="quickPub('lnOutText',getId('lnTopic').slice(0,80),getId('lnLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -232,6 +233,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <label class="lbl">Text</label><textarea class="ta" id="transInput" style="height:130px" placeholder="Enter text..."></textarea>
         <button class="btn" style="margin-top:9px" onclick="translateText(this)">🌐 Translate</button>
         <div class="out" id="transOut"><button class="copy-btn" onclick="cp('transOutText')">📋</button><div id="transOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_transOut" style="display:none;margin-top:8px" onclick="quickPub('transOutText',getId('transInput').slice(0,80),getId('tgtLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -247,6 +249,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="sumLang" value="en">
         <button class="btn" onclick="ai('Summarize in '+L(getId('sumLang'))+' in 3-5 sentences:\n\n'+getId('sumInput'),'sumOut','sumOutText',this)">✂️ Summarize</button>
         <div class="out" id="sumOut"><button class="copy-btn" onclick="cp('sumOutText')">📋</button><div id="sumOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_sumOut" style="display:none;margin-top:8px" onclick="quickPub('sumOutText',getId('sumInput').slice(0,80),getId('sumLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -271,6 +274,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="breakLang" value="en">
         <button class="btn" onclick="ai('Generate 5 breaking news headlines in '+L(getId('breakLang'))+' for: &quot;'+getId('breakInput')+'&quot;. Number each headline.','breakOut','breakOutText',this)">⚡ Generate Headlines</button>
         <div class="out" id="breakOut"><button class="copy-btn" onclick="cp('breakOutText')">📋</button><div id="breakOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_breakOut" style="display:none;margin-top:8px" onclick="quickPub('breakOutText',getId('breakInput').slice(0,80),getId('breakLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -321,6 +325,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="newsLang" value="en">
         <button class="btn" onclick="ai('Write a professional marine environment newsletter in '+L(getId('newsLang'))+' about: '+getId('newsInput')+'. Include: greeting, 3 highlights, eco tip, closing. Use HTML.','newsOut','newsOutText',this)">📧 Generate</button>
         <div class="out" id="newsOut"><button class="copy-btn" onclick="cp('newsOutText')">📋</button><div id="newsOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_newsOut" style="display:none;margin-top:8px" onclick="quickPub('newsOutText',getId('newsInput').slice(0,80),getId('newsLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -336,6 +341,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="socialLang" value="en">
         <button class="btn" onclick="ai('Generate social media posts in '+L(getId('socialLang'))+' for: &quot;'+getId('socialTopic')+'&quot;\n\n🐦 Twitter(280 chars,3 hashtags)\n📘 Facebook(2-3 sentences)\n💼 LinkedIn(professional,3-4 sentences)','socialOut','socialOutText',this)">📱 Generate Posts</button>
         <div class="out" id="socialOut"><button class="copy-btn" onclick="cp('socialOutText')">📋</button><div id="socialOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_socialOut" style="display:none;margin-top:8px" onclick="quickPub('socialOutText',getId('socialTopic'),getId('socialLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -368,6 +374,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="repLang" value="en">
         <button class="btn" onclick="ai('Write a professional '+getId('repType')+' in '+L(getId('repLang'))+' about: &quot;'+getId('repTopic')+'&quot;. Include: executive summary, key findings, data analysis, recommendations. Use HTML headers.','repOut','repOutText',this)">📊 Generate Report</button>
         <div class="out" id="repOut"><button class="copy-btn" onclick="cp('repOutText')">📋</button><div id="repOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_repOut" style="display:none;margin-top:8px" onclick="quickPub('repOutText',getId('repTopic'),getId('repLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -384,6 +391,7 @@ body{font-family:'Cairo',sans-serif;background:var(--navy);color:#e2eaf4;display
         <input type="hidden" id="rewLang" value="en">
         <button class="btn" onclick="ai('Rewrite in '+L(getId('rewLang'))+'. Mode: '+getId('rewMode')+'\n\n'+getId('rewInput'),'rewOut','rewOutText',this)">✍️ Rewrite</button>
         <div class="out" id="rewOut"><button class="copy-btn" onclick="cp('rewOutText')">📋</button><div id="rewOutText" class="out-text"></div></div>
+        <button class="btn btn-green" id="pub_rewOut" style="display:none;margin-top:8px" onclick="quickPub('rewOutText','Rewritten Article',getId('rewLang'))">🚀 Publish to Site</button>
       </div></div>
     </div>
 
@@ -497,6 +505,7 @@ function ai(prompt, outId, txtId, btn) {
       else txt.textContent=t;
     }
     N++; var u=document.getElementById('usageN'); if(u)u.textContent=N;
+    if(outId) { var pb=document.getElementById('pub_'+outId); if(pb)pb.style.display='inline-flex'; }
     return t;
   })
   .catch(function(e){ if(txt)txt.innerHTML='<span style="color:#ff5050">❌ '+e.message+'</span>'; })
@@ -607,14 +616,14 @@ function loadImgs(kw) {
   var grid=document.getElementById('imgGrid');
   if(!grid)return;
   grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(0,201,200,.6)">⏳ Loading images…</div>';
-  var queries=[kw,kw+' underwater',kw+' nature','ocean '+kw,'sea '+kw,'marine environment','coral reef','ocean water'];
   var html='';
+  var base=kw.replace(/\s+/g,'-').toLowerCase().slice(0,20);
+  var cats=['nature','animals','ocean','water','environment','travel','texture','abstract','food','architecture'];
   for(var i=0;i<8;i++){
-    var q=queries[i%queries.length];
-    var ts=Date.now()+i*777;
-    var url='https://source.unsplash.com/800x500/?'+encodeURIComponent(q)+'&t='+ts;
+    var seed=base+'-'+i+'-'+Math.floor(Date.now()/100000);
+    var url='https://picsum.photos/seed/'+seed+'/800/500';
     html+='<div class="img-item" id="ii'+i+'">';
-    html+='<img src="'+url+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'">';
+    html+='<img src="'+url+'" loading="lazy" onerror="this.src=\'https://picsum.photos/800/500?random='+(i*7+13)+'\'">';
     html+='<div class="img-item-ov"><button class="img-use" data-url="'+url+'" data-idx="'+i+'" onclick="selImg(this)">✅ Use</button></div>';
     html+='</div>';
   }
@@ -721,6 +730,16 @@ function translateText(btn) {
   var text=getId('transInput'),src=getId('srcLang'),tgt=getId('tgtLang');
   if(!text){toast('Please enter text','err');return;}
   ai('Translate from '+L(src)+' to '+L(tgt)+'. Return ONLY translation:\n\n'+text,'transOut','transOutText',btn);
+}
+
+function quickPub(txtId, topic, lang) {
+  var el=document.getElementById(txtId);
+  if(!el){toast('No content','err');return;}
+  var txt=el.innerHTML||('<p>'+el.textContent+'</p>');
+  _html=txt;
+  showTab('generate',document.querySelector('.scard'));
+  showPubPanel(topic||'New Article','Marine Ecology',lang||'en');
+  setTimeout(function(){document.getElementById('pubPanel').scrollIntoView({behavior:'smooth'});},100);
 }
 
 function alertAndPublish(btn) {
