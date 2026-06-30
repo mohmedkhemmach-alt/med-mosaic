@@ -318,9 +318,10 @@ app.get("/api/comments", async (req, res) => {
 });
 
 // POST /api/comments (بدون auth — أي زائر يستطيع التعليق)
+// articleId = 0 يعني تعليق عام على الموقع (غير مرتبط بمقال محدد)
 app.post("/api/comments", async (req, res) => {
   const { text, articleId, userName } = req.body;
-  if (!text || !articleId) return res.status(400).json({ error: "النص ورقم المقال مطلوبان" });
+  if (!text || articleId === undefined || articleId === null) return res.status(400).json({ error: "النص ورقم المقال مطلوبان" });
   try {
     const name = userName || "زائر";
     const [result] = await pool.execute(

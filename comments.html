@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comments · Med Mosaic</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
+  <style>
+    :root {
+      --deep:    #020b18;
+      --navy:    #061a30;
+      --ocean:   #0a3a5c;
+      --teal:    #0d7d8c;
+      --cyan:    #00c9c8;
+      --foam:    #e0f7f7;
+      --white:   #ffffff;
+      --text:    #cce8f0;
+      --muted:   #7fb3c8;
+      --card-bg: rgba(6,26,48,0.85);
+      --glow:    0 0 24px rgba(0,201,200,0.25);
+      --r:       14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: var(--deep); color: var(--text);
+      direction: ltr; min-height: 100vh;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--teal); border-radius: 3px; }
+
+    /* NAVBAR */
+    .navbar {
+      position: relative; z-index: 1000;
+      background: rgba(2,11,24,0.97); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(0,201,200,0.12); padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1280px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; height: 68px;
+    }
+    .logo { display: flex; align-items: center; gap: .7rem; text-decoration: none; }
+    .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .logo-name { font-size: 1.05rem; font-weight: 800; color: var(--white); letter-spacing: .5px; }
+    .logo-sub  { font-size: .65rem; color: var(--cyan); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+    .nav-links { display: flex; gap: .2rem; list-style: none; }
+    .nav-links a {
+      display: block; padding: .45rem .9rem; color: var(--muted); font-size: .93rem;
+      text-decoration: none; border-radius: 8px; transition: all .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--cyan); background: rgba(0,201,200,0.1); }
+    .nav-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-switcher { display: flex; gap: .3rem; }
+    .lang-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25); color: var(--muted);
+      font-size: .8rem; font-family: inherit; padding: .3rem .6rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+    }
+    .lang-btn.active, .lang-btn:hover { background: var(--cyan); color: var(--deep); border-color: var(--cyan); font-weight: 700; }
+    .btn-login {
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      padding: .45rem 1.1rem; border-radius: 8px; font-weight: 700; font-size: .9rem; text-decoration: none; transition: opacity .2s;
+    }
+    .btn-login:hover { opacity: .85; }
+
+    /* PAGE */
+    .page-wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+    .page-sub { font-size: .95rem; color: var(--muted); }
+
+    /* FORM CARD */
+    .comment-form-card {
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.18);
+      border-radius: var(--r); padding: 22px; margin-bottom: 32px;
+      backdrop-filter: blur(8px);
+    }
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .form-row.stack { flex-direction: column; }
+    .form-field { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .form-field label { font-size: .78rem; color: var(--muted); font-weight: 600; letter-spacing: .3px; }
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(0,201,200,0.18);
+      color: var(--text); font-family: inherit; font-size: .92rem;
+      padding: 10px 12px; border-radius: 8px; outline: none; transition: border-color .2s;
+      resize: vertical;
+    }
+    .form-field input:focus,
+    .form-field select:focus,
+    .form-field textarea:focus { border-color: var(--cyan); }
+    .form-field textarea { min-height: 90px; }
+    .form-field select option { background: var(--navy); color: var(--text); }
+    .form-submit-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; gap: 12px; }
+    .form-hint { font-size: .76rem; color: var(--muted); }
+    .btn-submit {
+      background: linear-gradient(135deg, var(--teal), var(--cyan)); color: var(--deep);
+      border: none; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; font-size: .9rem;
+      font-family: inherit; cursor: pointer; transition: opacity .2s; flex-shrink: 0;
+    }
+    .btn-submit:hover { opacity: .85; }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
+    .form-status { font-size: .82rem; margin-top: 10px; display: none; }
+    .form-status.show { display: block; }
+    .form-status.ok { color: #2dc653; }
+    .form-status.err { color: #f1727d; }
+
+    /* COMMENTS LIST */
+    .comments-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+    }
+    .comments-count { font-size: .85rem; color: var(--muted); }
+    .comments-count strong { color: var(--cyan); }
+    .refresh-btn {
+      background: none; border: 1px solid rgba(0,201,200,0.25); color: var(--muted);
+      font-size: .8rem; font-family: inherit; padding: .35rem .8rem; border-radius: 6px;
+      cursor: pointer; transition: all .2s;
+    }
+    .refresh-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .comment-card {
+      background: var(--card-bg); border: 1px solid rgba(0,201,200,0.1);
+      border-radius: var(--r); padding: 16px 18px; margin-bottom: 12px;
+    }
+    .comment-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
+    .comment-user { display: flex; align-items: center; gap: 10px; }
+    .comment-avatar {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--teal), var(--cyan));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: var(--deep); font-size: .85rem;
+    }
+    .comment-name { font-size: .9rem; font-weight: 700; color: var(--white); }
+    .comment-date { font-size: .74rem; color: var(--muted); }
+    .comment-article-tag {
+      font-size: .72rem; color: var(--cyan); background: rgba(0,201,200,0.1);
+      border: 1px solid rgba(0,201,200,0.2); padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+    }
+    .comment-text { font-size: .9rem; color: var(--text); line-height: 1.6; }
+
+    .empty-state, .loading-state {
+      text-align: center; padding: 50px 20px; color: var(--muted); font-size: .9rem;
+    }
+
+    @media(max-width: 600px) {
+      .form-row { flex-direction: column; }
+      .navbar { padding: 0 1rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <img src="logo.jpg" alt="Med Mosaic" style="height:38px;width:38px;border-radius:8px;object-fit:cover;">
+      <div class="logo-text">
+        <span class="logo-name">MED MOSAIC</span>
+        <span class="logo-sub">Marine Journalism</span>
+      </div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="news.html">News</a></li>
+      <li><a href="map.html">Map</a></li>
+      <li><a href="chatbot.html">AI Assistant</a></li>
+      <li><a href="comments.html" class="active">Comments</a></li>
+    </ul>
+    <div class="nav-actions">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="lb-en" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="lb-fr" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn" id="lb-ar" onclick="setLang('ar')">ع</button>
+      </div>
+      <a href="login.html" class="btn-login">Login</a>
+    </div>
+  </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="page-title">Community Comments</div>
+    <div class="page-sub">Share your thoughts on marine conservation, or leave feedback on a specific article.</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="comment-form-card">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="userName">Your name</label>
+        <input type="text" id="userName" placeholder="Guest" maxlength="100" />
+      </div>
+      <div class="form-field">
+        <label for="articleSelect">Related article (optional)</label>
+        <select id="articleSelect">
+          <option value="0">General comment</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row stack">
+      <div class="form-field">
+        <label for="commentText">Your comment</label>
+        <textarea id="commentText" placeholder="Write your comment here..." maxlength="1000"></textarea>
+      </div>
+    </div>
+    <div class="form-submit-row">
+      <span class="form-hint">Comments are public and visible immediately.</span>
+      <button class="btn-submit" id="submitBtn" onclick="submitComment()">Post Comment</button>
+    </div>
+    <div class="form-status" id="formStatus"></div>
+  </div>
+
+  <!-- LIST -->
+  <div class="comments-toolbar">
+    <div class="comments-count"><strong id="commentsTotal">0</strong> comments</div>
+    <button class="refresh-btn" onclick="loadComments()">↻ Refresh</button>
+  </div>
+
+  <div id="commentsList">
+    <div class="loading-state">Loading comments...</div>
+  </div>
+</div>
+
+<script>
+const API_BASE = ""; // same origin
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function initials(name) {
+  return (name || "?").trim().charAt(0).toUpperCase();
+}
+
+function timeAgo(dateStr) {
+  const d = new Date(dateStr);
+  const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff/60) + "m ago";
+  if (diff < 86400) return Math.floor(diff/3600) + "h ago";
+  if (diff < 2592000) return Math.floor(diff/86400) + "d ago";
+  return d.toLocaleDateString();
+}
+
+let articlesMap = {};
+
+async function loadArticlesForSelect() {
+  try {
+    const res = await fetch(`${API_BASE}/api/articles?limit=50&status=published`);
+    const data = await res.json();
+    const select = document.getElementById('articleSelect');
+    (data.articles || []).forEach(a => {
+      articlesMap[a.id] = a.title;
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.title;
+      select.appendChild(opt);
+    });
+  } catch (e) {
+    console.error("Could not load articles list", e);
+  }
+}
+
+async function loadComments() {
+  const list = document.getElementById('commentsList');
+  list.innerHTML = '<div class="loading-state">Loading comments...</div>';
+  try {
+    const res = await fetch(`${API_BASE}/api/comments`);
+    const comments = await res.json();
+    document.getElementById('commentsTotal').textContent = comments.length;
+
+    if (!comments.length) {
+      list.innerHTML = '<div class="empty-state">No comments yet. Be the first to share your thoughts! 🌊</div>';
+      return;
+    }
+
+    list.innerHTML = comments.map(c => {
+      const articleTag = c.article_id && c.article_id != 0
+        ? `<span class="comment-article-tag">${escapeHtml(articlesMap[c.article_id] || ('Article #' + c.article_id))}</span>`
+        : `<span class="comment-article-tag">General</span>`;
+      return `
+        <div class="comment-card">
+          <div class="comment-top">
+            <div class="comment-user">
+              <div class="comment-avatar">${escapeHtml(initials(c.user_name))}</div>
+              <div>
+                <div class="comment-name">${escapeHtml(c.user_name || 'Guest')}</div>
+                <div class="comment-date">${timeAgo(c.created_at)}</div>
+              </div>
+            </div>
+            ${articleTag}
+          </div>
+          <div class="comment-text">${escapeHtml(c.text)}</div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="empty-state">Could not load comments. Please try again later.</div>';
+    console.error(e);
+  }
+}
+
+async function submitComment() {
+  const textEl = document.getElementById('commentText');
+  const nameEl = document.getElementById('userName');
+  const articleEl = document.getElementById('articleSelect');
+  const statusEl = document.getElementById('formStatus');
+  const btn = document.getElementById('submitBtn');
+
+  const text = textEl.value.trim();
+  if (!text) {
+    statusEl.textContent = "Please write a comment before posting.";
+    statusEl.className = "form-status show err";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Posting...";
+  statusEl.className = "form-status";
+
+  try {
+    const res = await fetch(`${API_BASE}/api/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        articleId: parseInt(articleEl.value) || 0,
+        userName: nameEl.value.trim() || "Guest"
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error || "Failed to post comment");
+
+    statusEl.textContent = "Your comment was posted successfully!";
+    statusEl.className = "form-status show ok";
+    textEl.value = "";
+    loadComments();
+  } catch (e) {
+    statusEl.textContent = "Something went wrong: " + e.message;
+    statusEl.className = "form-status show err";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Post Comment";
+  }
+}
+
+loadArticlesForSelect().then(loadComments);
+</script>
+<script src="i18n.js"></script>
+</body>
+</html>
