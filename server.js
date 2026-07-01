@@ -209,7 +209,7 @@ app.get("/sitemap.xml", async (req, res) => {
   ];
   try {
     const [articles] = await pool.execute(
-      "SELECT id, COALESCE(updated_at, created_at) as lastmod FROM articles WHERE status = 'published' ORDER BY id DESC"
+      "SELECT id, created_at as lastmod FROM articles WHERE status = 'published' ORDER BY id DESC"
     );
     const articlePages = articles.map(a => ({
       loc: `${BASE}/article.html?id=${a.id}`,
