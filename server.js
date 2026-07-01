@@ -195,6 +195,37 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+
+// ===== SEO ROUTES =====
+// GET /sitemap.xml — ديناميكي يضيف كل مقال منشور تلقائياً
+app.get("/sitemap.xml", async (req, res) => {
+  const BASE = "https://med-mosaic-production.up.railway.app";
+  const staticPages = [
+    { loc: `${BASE}/index.html`,   freq: "daily",   priority: "1.0" },
+    { loc: `${BASE}/news.html`,    freq: "daily",   priority: "0.9" },
+    { loc: `${BASE}/map.html`,     freq: "weekly",  priority: "0.7" },
+    { loc: `${BASE}/chatbot.html`, freq: "monthly", priority: "0.5" },
+    { loc: `${BASE}/comments.html`,freq: "weekly",  priority: "0.4" },
+  ];
+  try {
+    const [articles] = await pool.execute(
+      "SELECT id, COALESCE(updated_at, created_at) as lastmod FROM articles WHERE status = 'published' ORDER BY id DESC"
+    );
+    const articlePages = articles.map(a => ({
+      loc: `${BASE}/article.html?id=${a.id}`,
+      freq: "monthly",
+      priority: "0.8",
+      lastmod: a.lastmod ? new Date(a.lastmod).toISOString().split("T")[0] : null
+    }));
+    const allPages = [...staticPages, ...articlePages];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${
+      allPages.map(p => `  <url>\n    <loc>${p.loc}</loc>\n${p.lastmod ? `    <lastmod>${p.lastmod}</lastmod>\n` : ""}    <changefreq>${p.freq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`).join("\n")
+    }\n</urlset>`;
+    res.setHeader("Content-Type", "application/xml");
+    res.send(xml);
+  } catch(e) { res.status(500).send("sitemap error"); }
+});
+
 // ===== ARTICLES ROUTES =====
 // GET /api/articles
 app.get("/api/articles", async (req, res) => {

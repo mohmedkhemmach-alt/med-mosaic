@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Article — Med Mosaic</title>
+    <meta name="description" id="meta-desc" content="Read in-depth marine environment articles covering ocean pollution, conservation, and biodiversity from Med Mosaic." />
+  <meta name="keywords" content="marine article, ocean conservation, environmental report, Mediterranean biodiversity" />
+  <meta property="og:title" id="og-title" content="Med Mosaic Article" />
+  <meta property="og:description" id="og-desc" content="In-depth marine environment journalism from Med Mosaic." />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" id="og-image" content="https://med-mosaic-production.up.railway.app/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" id="tw-title" content="Med Mosaic" />
+  <meta name="twitter:image" id="tw-image" content="https://med-mosaic-production.up.railway.app/og-image.jpg" />
+  <meta name="robots" content="index, follow" />
+<title>Article — Med Mosaic</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700&display=swap" />
   <style>
     :root {
@@ -606,6 +618,13 @@
     if (viewsEl)  viewsEl.textContent  = ((a.views || 0) + 1).toLocaleString();
     if (breadEl)  breadEl.textContent  = a.title;
     document.title = a.title + ' — Med Mosaic';
+    // SEO ديناميكي — يحدّث meta tags لكل مقال تلقائياً
+    const _excerpt = (a.excerpt || a.content || '').replace(/<[^>]*>/g,'').slice(0,155);
+    const _img = a.cover_image || 'https://med-mosaic-production.up.railway.app/og-image.jpg';
+    const _setMeta = (id, attr, val) => { const el=document.getElementById(id); if(el) el.setAttribute(attr,'content',val)||el.setAttribute('content',val); };
+    ['meta-desc','og-desc'].forEach(id=>{ const el=document.getElementById(id); if(el) el.setAttribute('content',_excerpt); });
+    ['og-title','tw-title'].forEach(id=>{ const el=document.getElementById(id); if(el) el.setAttribute('content', a.title+' — Med Mosaic'); });
+    ['og-image','tw-image'].forEach(id=>{ const el=document.getElementById(id); if(el) el.setAttribute('content',_img); });
 
     // صورة الغلاف
     const coverImg = document.getElementById('article-cover-img');
