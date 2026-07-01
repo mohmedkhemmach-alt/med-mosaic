@@ -17,6 +17,37 @@ const JWT_SECRET = "marine-eco-secret-2025";
 
 app.use(cors());
 app.use(express.json());
+
+// ===== ADMIN FOLDER PROTECTION =====
+// دالة مساعدة لقراءة الكوكي من headers
+function getCookie(req, name) {
+  const cookies = req.headers.cookie || '';
+  const match = cookies.split(';').map(c => c.trim()).find(c => c.startsWith(name + '='));
+  return match ? match.split('=').slice(1).join('=') : null;
+}
+
+// حماية كل ملفات HTML في مجلد /admin/
+app.use('/admin', (req, res, next) => {
+  // السماح بالملفات غير HTML (JS, CSS, images)
+  if (!req.path.endsWith('.html') && req.path !== '/' && req.path !== '') return next();
+  const token = getCookie(req, 'admin_token');
+  if (!token) return res.redirect('/login.html');
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    if (decoded.role !== 'admin') return res.redirect('/login.html');
+    next();
+  } catch {
+    res.setHeader('Set-Cookie', 'admin_token=; HttpOnly; Path=/; Max-Age=0');
+    return res.redirect('/login.html');
+  }
+});
+
+// GET /api/auth/logout — حذف الكوكي
+app.get('/api/auth/logout', (req, res) => {
+  res.setHeader('Set-Cookie', 'admin_token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict');
+  res.json({ message: 'تم تسجيل الخروج' });
+});
+
 app.use(express.static(__dirname));
 
 // ===== MySQL CONNECTION =====
@@ -166,6 +197,8 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "بيانات الدخول غير صحيحة" });
     }
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "7d" });
+    // httpOnly cookie للحماية على مستوى السيرفر
+    res.setHeader("Set-Cookie", `admin_token=${token}; HttpOnly; Path=/; Max-Age=${7*24*3600}; SameSite=Strict`);
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
